@@ -148,7 +148,7 @@ OddlženieOnline.sk systém
         </p>
       </div>
     `
-    // attachments: pdfFiles // TODO: Pridať skutočné PDF súbory
+    attachments: pdfFiles
   };
   
   await transporter.sendMail(mailOptions);
@@ -232,7 +232,7 @@ async function generatePDFs(formData) {
       
       // Spustenie Python PDF generátora
       const pythonScript = path.join(__dirname, 'pdf_generator.py');
-      const command = `python3 ${pythonScript} ${dataFile}`;
+      const command = `python3 ${pythonScript} ${dataFile} ${tempDir}`;
       
       exec(command, { cwd: tempDir }, async (error, stdout, stderr) => {
         if (error) {

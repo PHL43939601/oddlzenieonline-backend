@@ -657,7 +657,8 @@ if __name__ == '__main__':
     
     # Generovanie PDF
     generator = PDFGenerator(data)
-    files = generator.generate_all('/tmp')
+    output_dir = sys.argv[2] if len(sys.argv) > 2 else '/tmp'
+    files = generator.generate_all(output_dir)
     
     print("PDF dokumenty vygenerované:")
     for key, path in files.items():
