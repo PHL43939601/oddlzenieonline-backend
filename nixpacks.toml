@@ -1,0 +1,19 @@
+# Railway Nixpacks Configuration
+# Python + Node.js (bez PEP 668 erroru)
+
+[phases.setup]
+aptPkgs = ["python3", "python3-venv", "python3-dev", "build-essential"]
+
+[phases.install]
+cmds = [
+  "python3 -m venv /app/venv",
+  "/app/venv/bin/pip install --upgrade pip",
+  "/app/venv/bin/pip install reportlab",
+  "npm install"
+]
+
+[phases.build]
+cmds = ["echo 'Build complete'"]
+
+[start]
+cmd = "source /app/venv/bin/activate && npm start"
