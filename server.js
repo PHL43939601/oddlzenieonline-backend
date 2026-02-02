@@ -1,10 +1,10 @@
 // server.js - Backend API pre OddlzenieOnline.sk
-// Node.js + Express + SendGrid
+// Node.js + Express + Resend
 
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
 const app = express();
@@ -27,18 +27,12 @@ const apiLimiter = rateLimit({
   message: { error: 'Príliš veľa žiadostí. Skúste znova o 15 minút.' }
 });
 
-// Gmail SMTP setup s Nodemailer
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD
-  }
-});
+// Resend setup
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email konfigurácia
-const RECIPIENT_EMAIL = 'propertyholdinglimited@gmail.com';
-const FROM_EMAIL = process.env.GMAIL_USER;
+const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'propertyholdinglimited@gmail.com';
+const FROM_EMAIL = 'onboarding@resend.dev'; // Resend default sender
 
 // ============================================
 // HLAVNÝ ENDPOINT - Odoslanie formulára
@@ -54,7 +48,7 @@ app.post('/api/submit-form', apiLimiter, async (req, res) => {
       });
     }
     
-    // 2. TODO: Generovanie PDF (zatiaľ placeholder)
+    // 2. Generovanie PDF
     console.log('Generujem PDF dokumenty...');
     const pdfFiles = await generatePDFs(formData);
     
@@ -63,9 +57,6 @@ app.post('/api/submit-form', apiLimiter, async (req, res) => {
     
     // 4. Odoslanie potvrdenia klientovi
     await sendConfirmationToClient(formData);
-    
-    // 5. TODO: Uloženie do databázy
-    console.log('Ukladám do databázy...');
     
     res.json({ 
       success: true, 
@@ -84,136 +75,114 @@ app.post('/api/submit-form', apiLimiter, async (req, res) => {
 // Odoslanie emailu právnikovi
 // ============================================
 async function sendEmailToLawyer(formData, pdfFiles) {
-  const mailOptions = {
-    from: FROM_EMAIL,
-    to: RECIPIENT_EMAIL,
-    subject: `Nová žiadosť o osobný bankrot - ${formData.meno} ${formData.priezvisko}`,
-    text: `
-Dobrý deň,
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: RECIPIENT_EMAIL,
+      subject: `Nová žiadosť o osobný bankrot - ${formData.meno} ${formData.priezvisko}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Nová žiadosť o osobný bankrot</h2>
+          
+          <h3>Informácie o klientovi:</h3>
+          <table style="border-collapse: collapse; width: 100%;">
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Meno:</b></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${formData.meno} ${formData.priezvisko}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Email:</b></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${formData.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Telefón:</b></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${formData.telefon}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Rodné číslo:</b></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${formData.rodneCislo}</td>
+            </tr>
+          </table>
+          
+          <p style="margin-top: 20px;">V prílohe sú vyplnené PDF dokumenty na kontrolu.</p>
+          
+          <h3>Ďalší postup:</h3>
+          <ol>
+            <li>Skontrolujte dokumenty (15-30 minút)</li>
+            <li>Kontaktujte klienta na <a href="mailto:${formData.email}">${formData.email}</a></li>
+            <li>Dohodnite platbu 349 EUR</li>
+            <li>Po platbe odovzdajte dokumenty</li>
+          </ol>
+          
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 12px; color: #64748b;">
+            OddlženieOnline.sk | Property Holding Limited, s.r.o.<br>
+            Mostná 72, 949 01 Nitra, SK
+          </p>
+        </div>
+      `,
+      attachments: pdfFiles
+    });
 
-Do systému OddlženieOnline.sk bola podaná nová žiadosť.
+    if (error) {
+      throw error;
+    }
 
-KLIENT:
-- Meno: ${formData.meno} ${formData.priezvisko}
-- Email: ${formData.email}
-- Telefón: ${formData.telefon}
-- Rodné číslo: ${formData.rodneCislo}
-- Adresa: ${formData.ulica} ${formData.cislo}, ${formData.obec}
-
-V prílohe sú vyplnené PDF dokumenty.
-
-ĎALŠÍ POSTUP:
-1. Skontrolujte dokumenty (15-30 minút)
-2. Kontaktujte klienta na: ${formData.email}
-3. Dohodnite platbu 349 EUR
-4. Po platbe odovzdajte dokumenty
-
-S pozdravom,
-OddlženieOnline.sk systém
-    `,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Nová žiadosť o osobný bankrot</h2>
-        
-        <h3>Informácie o klientovi:</h3>
-        <table style="border-collapse: collapse; width: 100%;">
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Meno:</b></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${formData.meno} ${formData.priezvisko}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Email:</b></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${formData.email}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Telefón:</b></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${formData.telefon}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f8fafc;"><b>Rodné číslo:</b></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${formData.rodneCislo}</td>
-          </tr>
-        </table>
-        
-        <p style="margin-top: 20px;">V prílohe sú vyplnené PDF dokumenty na kontrolu.</p>
-        
-        <h3>Ďalší postup:</h3>
-        <ol>
-          <li>Skontrolujte dokumenty (15-30 minút)</li>
-          <li>Kontaktujte klienta na <a href="mailto:${formData.email}">${formData.email}</a></li>
-          <li>Dohodnite platbu 349 EUR</li>
-          <li>Po platbe odovzdajte dokumenty</li>
-        </ol>
-        
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
-        <p style="font-size: 12px; color: #64748b;">
-          OddlženieOnline.sk | Property Holding Limited, s.r.o.<br>
-          Mostná 72, 949 01 Nitra, SK
-        </p>
-      </div>
-    `,
-    attachments: pdfFiles
-  };
-  
-  await transporter.sendMail(mailOptions);
-  console.log('✅ Email odoslaný právnikovi');
+    console.log('✅ Email odoslaný právnikovi');
+  } catch (error) {
+    console.error('Email error:', error);
+    throw error;
+  }
 }
 
 // ============================================
 // Odoslanie potvrdenia klientovi
 // ============================================
 async function sendConfirmationToClient(formData) {
-  const mailOptions = {
-    from: FROM_EMAIL,
-    to: formData.email,
-    subject: 'Žiadosť prijatá - OddlženieOnline.sk',
-    text: `
-Dobrý deň ${formData.meno},
-
-Vaša žiadosť o osobný bankrot bola úspešne prijatá!
-
-ČO ĎALEJ:
-1. Právnik skontroluje vaše dokumenty (24-48 hodín)
-2. Ozveme sa vám s informáciami o ďalšom postupe
-3. Po kontrole a úhrade 349 EUR dostanete hotové dokumenty
-
-Ak máte akékoľvek otázky, neváhajte nás kontaktovať.
-
-S pozdravom,
-Tím OddlženieOnline.sk
-    `,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Žiadosť úspešne prijatá</h2>
-        
-        <p>Dobrý deň ${formData.meno},</p>
-        
-        <p>Vaša žiadosť o osobný bankrot bola úspešne prijatá!</p>
-        
-        <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Čo ďalej:</h3>
-          <ol style="margin-bottom: 0;">
-            <li style="margin-bottom: 10px;"><b>Právnik skontroluje vaše dokumenty</b> (24-48 hodín)</li>
-            <li style="margin-bottom: 10px;"><b>Ozveme sa vám</b> s informáciami o ďalšom postupe</li>
-            <li><b>Po kontrole a úhrade 349 EUR</b> dostanete hotové dokumenty</li>
-          </ol>
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: formData.email,
+      subject: 'Žiadosť prijatá - OddlženieOnline.sk',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Žiadosť úspešne prijatá</h2>
+          
+          <p>Dobrý deň ${formData.meno},</p>
+          
+          <p>Vaša žiadosť o osobný bankrot bola úspešne prijatá!</p>
+          
+          <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Čo ďalej:</h3>
+            <ol style="margin-bottom: 0;">
+              <li style="margin-bottom: 10px;"><b>Právnik skontroluje vaše dokumenty</b> (24-48 hodín)</li>
+              <li style="margin-bottom: 10px;"><b>Ozveme sa vám</b> s informáciami o ďalšom postupe</li>
+              <li><b>Po kontrole a úhrade 349 EUR</b> dostanete hotové dokumenty</li>
+            </ol>
+          </div>
+          
+          <p>Ak máte akékoľvek otázky, neváhajte nás kontaktovať.</p>
+          
+          <p>S pozdravom,<br><b>Tím OddlženieOnline.sk</b></p>
+          
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+          <p style="font-size: 12px; color: #64748b;">
+            OddlženieOnline.sk | Property Holding Limited, s.r.o.<br>
+            Mostná 72, 949 01 Nitra, SK
+          </p>
         </div>
-        
-        <p>Ak máte akékoľvek otázky, neváhajte nás kontaktovať.</p>
-        
-        <p>S pozdravom,<br><b>Tím OddlženieOnline.sk</b></p>
-        
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
-        <p style="font-size: 12px; color: #64748b;">
-          OddlženieOnline.sk | Property Holding Limited, s.r.o.<br>
-          Mostná 72, 949 01 Nitra, SK
-        </p>
-      </div>
-    `
-  };
-  
-  await transporter.sendMail(mailOptions);
-  console.log('✅ Potvrdenie odoslané klientovi');
+      `
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    console.log('✅ Potvrdenie odoslané klientovi');
+  } catch (error) {
+    console.error('Email error:', error);
+    throw error;
+  }
 }
 
 // ============================================
@@ -270,15 +239,14 @@ async function generatePDFs(formData) {
           }
         ];
         
-        // Konverzia súborov na base64 pre email prílohy
+        // Konverzia súborov pre Resend attachments
         const attachments = [];
         for (const file of pdfFiles) {
           try {
             const content = await fs.readFile(file.path);
             attachments.push({
               filename: file.filename,
-              content: content,
-              contentType: 'application/pdf'
+              content: content
             });
           } catch (err) {
             console.error(`Chyba pri čítaní súboru ${file.filename}:`, err);
@@ -315,8 +283,6 @@ app.get('/health', (req, res) => {
 // ============================================
 app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
-  console.log(`📧 Emaily sa posielajú na: ${RECIPIENT_EMAIL}`);
+  console.log(`📧 Emaily sa posielajú cez Resend API`);
+  console.log(`📧 Recipient: ${RECIPIENT_EMAIL}`);
 });
-
-
-
