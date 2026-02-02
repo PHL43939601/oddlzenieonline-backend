@@ -147,7 +147,7 @@ OddlženieOnline.sk systém
           Mostná 72, 949 01 Nitra, SK
         </p>
       </div>
-    `
+    `,
     attachments: pdfFiles
   };
   
@@ -313,3 +313,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
   console.log(`📧 Emaily sa posielajú na: ${RECIPIENT_EMAIL}`);
 });
+
