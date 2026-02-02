@@ -13,7 +13,8 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: ['https://oddlzenieonline.sk', 'https://www.oddlzenieonline.sk']
+  origin: true, // Allow all origins for testing
+  credentials: true
 }));
 
 // Rate limiting - max 3 žiadosti za 15 minút
@@ -313,4 +314,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
   console.log(`📧 Emaily sa posielajú na: ${RECIPIENT_EMAIL}`);
 });
+
 
