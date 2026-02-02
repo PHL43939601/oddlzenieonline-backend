@@ -8,8 +8,8 @@ aptPkgs = ["python3", "python3-pip", "python3-dev", "build-essential", "fonts-de
 [phases.install]
 # Python dependencies
 cmds = [
-  "pip3 install --upgrade pip",
-  "pip3 install reportlab",
+  "pip3 install --upgrade pip --break-system-packages",
+  "pip3 install reportlab --break-system-packages",
   "npm install"
 ]
 
