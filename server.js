@@ -10,6 +10,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Railway proxy
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json());
 app.use(cors({
@@ -314,5 +317,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
   console.log(`📧 Emaily sa posielajú na: ${RECIPIENT_EMAIL}`);
 });
+
 
 
