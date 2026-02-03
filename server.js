@@ -1,10 +1,10 @@
 // server.js - Backend API pre OddlzenieOnline.sk
-// Node.js + Express + Resend
+// Node.js + Express + SendGrid
 
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const { Resend } = require('resend');
+const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 
 const app = express();
@@ -27,12 +27,13 @@ const apiLimiter = rateLimit({
   message: { error: 'Príliš veľa žiadostí. Skúste znova o 15 minút.' }
 });
 
-// Resend setup
-const resend = new Resend(process.env.RESEND_API_KEY);
+// SendGrid setup
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Email konfigurácia
 const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'propertyholdinglimited@gmail.com';
-const FROM_EMAIL = 'onboarding@resend.dev'; // Resend default sender
+const FROM_EMAIL = 'info@oddlzenieonline.sk'; // Custom domain email
+const REPLY_TO_EMAIL = 'info@oddlzenieonline.sk';
 
 // ============================================
 // HLAVNÝ ENDPOINT - Odoslanie formulára
@@ -76,9 +77,10 @@ app.post('/api/submit-form', apiLimiter, async (req, res) => {
 // ============================================
 async function sendEmailToLawyer(formData, pdfFiles) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const msg = {
       to: RECIPIENT_EMAIL,
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       subject: `Nová žiadosť o osobný bankrot - ${formData.meno} ${formData.priezvisko}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -122,15 +124,15 @@ async function sendEmailToLawyer(formData, pdfFiles) {
         </div>
       `,
       attachments: pdfFiles
-    });
+    };
 
-    if (error) {
-      throw error;
-    }
-
+    await sgMail.send(msg);
     console.log('✅ Email odoslaný právnikovi');
   } catch (error) {
     console.error('Email error:', error);
+    if (error.response) {
+      console.error('SendGrid error body:', error.response.body);
+    }
     throw error;
   }
 }
@@ -140,9 +142,10 @@ async function sendEmailToLawyer(formData, pdfFiles) {
 // ============================================
 async function sendConfirmationToClient(formData) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const msg = {
       to: formData.email,
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       subject: 'Žiadosť prijatá - OddlženieOnline.sk',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -172,15 +175,15 @@ async function sendConfirmationToClient(formData) {
           </p>
         </div>
       `
-    });
+    };
 
-    if (error) {
-      throw error;
-    }
-
+    await sgMail.send(msg);
     console.log('✅ Potvrdenie odoslané klientovi');
   } catch (error) {
     console.error('Email error:', error);
+    if (error.response) {
+      console.error('SendGrid error body:', error.response.body);
+    }
     throw error;
   }
 }
@@ -220,36 +223,27 @@ async function generatePDFs(formData) {
         const meno = formData.meno || 'Dlznik';
         const priezvisko = formData.priezvisko || 'Neznamy';
         
-        const pdfFiles = [
-          {
-            filename: `Zivotopis_${meno}_${priezvisko}.pdf`,
-            path: path.join(tempDir, `Zivotopis_${meno}_${priezvisko}.pdf`)
-          },
-          {
-            filename: `Majetok_${meno}_${priezvisko}.pdf`,
-            path: path.join(tempDir, `Majetok_${meno}_${priezvisko}.pdf`)
-          },
-          {
-            filename: `Majetok_Historia_${meno}_${priezvisko}.pdf`,
-            path: path.join(tempDir, `Majetok_Historia_${meno}_${priezvisko}.pdf`)
-          },
-          {
-            filename: `Veritelia_${meno}_${priezvisko}.pdf`,
-            path: path.join(tempDir, `Veritelia_${meno}_${priezvisko}.pdf`)
-          }
+        const pdfFilePaths = [
+          path.join(tempDir, `Zivotopis_${meno}_${priezvisko}.pdf`),
+          path.join(tempDir, `Majetok_${meno}_${priezvisko}.pdf`),
+          path.join(tempDir, `Majetok_Historia_${meno}_${priezvisko}.pdf`),
+          path.join(tempDir, `Veritelia_${meno}_${priezvisko}.pdf`)
         ];
         
-        // Konverzia súborov pre Resend attachments
+        // Konverzia súborov pre SendGrid attachments
         const attachments = [];
-        for (const file of pdfFiles) {
+        for (const filePath of pdfFilePaths) {
           try {
-            const content = await fs.readFile(file.path);
+            const content = await fs.readFile(filePath);
+            const filename = path.basename(filePath);
             attachments.push({
-              filename: file.filename,
-              content: content
+              content: content.toString('base64'),
+              filename: filename,
+              type: 'application/pdf',
+              disposition: 'attachment'
             });
           } catch (err) {
-            console.error(`Chyba pri čítaní súboru ${file.filename}:`, err);
+            console.error(`Chyba pri čítaní súboru ${filePath}:`, err);
           }
         }
         
@@ -283,6 +277,7 @@ app.get('/health', (req, res) => {
 // ============================================
 app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
-  console.log(`📧 Emaily sa posielajú cez Resend API`);
+  console.log(`📧 Emaily sa posielajú cez SendGrid API`);
+  console.log(`📧 From: ${FROM_EMAIL}`);
   console.log(`📧 Recipient: ${RECIPIENT_EMAIL}`);
 });
