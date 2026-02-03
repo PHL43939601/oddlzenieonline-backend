@@ -32,7 +32,10 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Email konfigurácia
 const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'propertyholdinglimited@gmail.com';
-const FROM_EMAIL = 'info@oddlzenieonline.sk'; // Custom domain email
+const FROM_EMAIL = {
+  name: 'OddlženieOnline.sk',
+  email: 'info@oddlzenieonline.sk'
+};
 const REPLY_TO_EMAIL = 'info@oddlzenieonline.sk';
 
 // ============================================
@@ -278,6 +281,6 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Backend API beží na porte ${PORT}`);
   console.log(`📧 Emaily sa posielajú cez SendGrid API`);
-  console.log(`📧 From: ${FROM_EMAIL}`);
+  console.log(`📧 From: ${FROM_EMAIL.name} <${FROM_EMAIL.email}>`);
   console.log(`📧 Recipient: ${RECIPIENT_EMAIL}`);
 });
