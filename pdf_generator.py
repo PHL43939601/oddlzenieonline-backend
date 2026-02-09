@@ -89,15 +89,19 @@ class PDFGenerator:
         return t
 
     def _field_table(self, rows):
-        """Create a standard field table"""
-        t = Table(rows, colWidths=[5.5*cm, 10.5*cm])
+        """Create a standard field table with text wrapping"""
+        label_style = ParagraphStyle('TblLabel', fontName=FONT_BOLD, fontSize=9,
+            textColor=colors.HexColor('#1e293b'), leading=12)
+        value_style = ParagraphStyle('TblValue', fontName=FONT, fontSize=9,
+            textColor=colors.HexColor('#1e293b'), leading=12)
+        wrapped = []
+        for r in rows:
+            wrapped.append([Paragraph(str(r[0]), label_style), Paragraph(str(r[1]), value_style)])
+        t = Table(wrapped, colWidths=[6*cm, 10*cm])
         t.setStyle(TableStyle([
-            ('FONT', (0,0),(0,-1), FONT_BOLD, 9),
-            ('FONT', (1,0),(1,-1), FONT, 9),
-            ('TEXTCOLOR', (0,0),(-1,-1), colors.HexColor('#1e293b')),
             ('VALIGN', (0,0),(-1,-1), 'TOP'),
             ('BOTTOMPADDING', (0,0),(-1,-1), 5),
-            ('TOPPADDING', (0,0),(-1,-1), 2),
+            ('TOPPADDING', (0,0),(-1,-1), 3),
             ('GRID', (0,0),(-1,-1), 0.5, colors.HexColor('#e2e8f0')),
         ]))
         return t
@@ -210,24 +214,28 @@ class PDFGenerator:
 
         # 6. Sociálne postavenie
         story.append(Paragraph('6. Sociálne postavenie dlžníka', self.styles['SectionH']))
-        soc_items = []
+        story.append(Paragraph('V súčasnosti som:', self.styles['SubH']))
         soc_map = {
-            'soc_zamestanany': 'Zamestnaný/á',
-            'soc_szco': 'Samostatne zárobkovo činná osoba',
-            'soc_dochodok': 'Poberateľ/-ka dôchodku',
-            'soc_nezamestnany': 'Dobrovoľne nezamestnaný/á',
-            'soc_uchadzac': 'Uchádzač/-ka o zamestnanie',
-            'soc_davky': 'Poberateľ/-ka sociálnych dávok',
-            'soc_materska': 'Materská / rodičovská dovolenka',
+            'soc_zamestanany': 'zamestnaný/á',
+            'soc_szco': 'samostatne zárobkovo činná osoba',
+            'soc_dochodok': 'poberateľ/-ka dôchodku',
+            'soc_nezamestnany': 'dobrovoľne nezamestnaný/á',
+            'soc_uchadzac': 'uchádzač/-ka o zamestnanie',
+            'soc_davky': 'poberateľ/-ka sociálnych dávok',
+            'soc_ine': 'iné',
         }
         for key, label in soc_map.items():
-            if self.g(key):
-                soc_items.append(label)
-        if soc_items:
-            story.append(Paragraph('☒ ' + ', '.join(soc_items), self.styles['Body']))
-        ico = self.g('ico')
-        if ico:
-            story.append(Paragraph(f'→ IČO: {esc(ico)}', self.styles['Body']))
+            checked = '☒' if self.g(key) else '☐'
+            extra = ''
+            if key == 'soc_szco' and self.g(key):
+                extra = f'    IČO: {esc(self.g("ico"))}'
+            elif key == 'soc_dochodok' and self.g(key):
+                extra = f'    druh: {esc(self.g("dochodokDruh"))}'
+            elif key == 'soc_davky' and self.g(key):
+                extra = f'    druh: {esc(self.g("davkyDruh"))}'
+            elif key == 'soc_ine' and self.g(key):
+                extra = f'    {esc(self.g("inePostavenie"))}'
+            story.append(Paragraph(f'{checked} {label}{extra}', self.styles['Body']))
 
         # 7. Životná situácia
         story.append(Paragraph('7. Opíšte v stručnosti Vašu aktuálnu životnú situáciu', self.styles['SectionH']))
@@ -339,11 +347,12 @@ class PDFGenerator:
         if pozemky:
             for i, p in enumerate(pozemky, 1):
                 story.append(self._item_header(f'Pozemok č. {i}'))
+                reg = p.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(p.get('lv',''))],
                     ['Obec:', esc(p.get('obec',''))],
                     ['Katastrálne územie:', esc(p.get('ku',''))],
-                    ['Parcela č.:', esc(p.get('parcela',''))],
+                    ['Parcela č.:', esc(f"{p.get('parcela','')} (register {reg})")],
                     ['Výmera (m²):', esc(p.get('vymera',''))],
                     ['Druh pozemku:', esc(p.get('druh',''))],
                     ['Hodnota:', esc(f"{p.get('hodnota','')} €")],
@@ -359,13 +368,14 @@ class PDFGenerator:
         if stavby:
             for i, s in enumerate(stavby, 1):
                 story.append(self._item_header(f'Stavba č. {i}'))
+                reg = s.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(s.get('lv',''))],
                     ['Obec:', esc(s.get('obec',''))],
                     ['Katastrálne územie:', esc(s.get('ku',''))],
                     ['Súpisné číslo:', esc(s.get('supisne',''))],
                     ['Orientačné číslo:', esc(s.get('orient',''))],
-                    ['Na pozemku parcelné číslo:', esc(s.get('parcela',''))],
+                    ['Na pozemku parcelné číslo:', esc(f"{s.get('parcela','')} (register {reg})")],
                     ['Popis stavby:', esc(s.get('popis',''))],
                     ['Hodnota:', esc(f"{s.get('hodnota','')} €")],
                     ['Spoluvlastnícky podiel:', esc(s.get('podiel',''))],
@@ -380,6 +390,7 @@ class PDFGenerator:
         if byty:
             for i, b in enumerate(byty, 1):
                 story.append(self._item_header(f'Byt č. {i}'))
+                reg = b.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(b.get('lv',''))],
                     ['Obec:', esc(b.get('obec',''))],
@@ -389,7 +400,7 @@ class PDFGenerator:
                     ['Číslo bytu:', esc(b.get('cislo',''))],
                     ['Súpisné číslo:', esc(b.get('supisne',''))],
                     ['Orientačné číslo:', esc(b.get('orient',''))],
-                    ['Na pozemku parcelné číslo:', esc(b.get('parcela',''))],
+                    ['Na pozemku parcelné číslo:', esc(f"{b.get('parcela','')} (register {reg})")],
                     ['Druh pozemku:', esc(b.get('druh',''))],
                     ['Popis stavby:', esc(b.get('popisStavby',''))],
                     ['Podiel na spoločných častiach:', esc(b.get('podielSpoloc',''))],
@@ -485,11 +496,12 @@ class PDFGenerator:
         if hp:
             for i, p in enumerate(hp, 1):
                 story.append(self._item_header(f'Pozemok č. {i}'))
+                reg = p.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(p.get('lv',''))],
                     ['Obec:', esc(p.get('obec',''))],
                     ['Katastrálne územie:', esc(p.get('ku',''))],
-                    ['Parcela č.:', esc(p.get('parcela',''))],
+                    ['Parcela č.:', esc(f"{p.get('parcela','')} (register {reg})")],
                     ['Výmera (m²):', esc(p.get('vymera',''))],
                     ['Druh pozemku:', esc(p.get('druh',''))],
                     ['Hodnota:', esc(f"{p.get('hodnota','')} €")],
@@ -505,13 +517,14 @@ class PDFGenerator:
         if hs:
             for i, s in enumerate(hs, 1):
                 story.append(self._item_header(f'Stavba č. {i}'))
+                reg = s.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(s.get('lv',''))],
                     ['Obec:', esc(s.get('obec',''))],
                     ['Katastrálne územie:', esc(s.get('ku',''))],
                     ['Súpisné číslo:', esc(s.get('supisne',''))],
                     ['Orientačné číslo:', esc(s.get('orient',''))],
-                    ['Na pozemku parcelné číslo:', esc(s.get('parcela',''))],
+                    ['Na pozemku parcelné číslo:', esc(f"{s.get('parcela','')} (register {reg})")],
                     ['Popis stavby:', esc(s.get('popis',''))],
                     ['Hodnota:', esc(f"{s.get('hodnota','')} €")],
                     ['Spoluvlastnícky podiel:', esc(s.get('podiel',''))],
@@ -525,6 +538,7 @@ class PDFGenerator:
         if hb:
             for i, b in enumerate(hb, 1):
                 story.append(self._item_header(f'Byt č. {i}'))
+                reg = b.get('register', 'C')
                 story.append(self._field_table([
                     ['List vlastníctva č.:', esc(b.get('lv',''))],
                     ['Obec:', esc(b.get('obec',''))],
@@ -534,7 +548,7 @@ class PDFGenerator:
                     ['Číslo bytu:', esc(b.get('cislo',''))],
                     ['Súpisné číslo:', esc(b.get('supisne',''))],
                     ['Orientačné číslo:', esc(b.get('orient',''))],
-                    ['Na pozemku parcelné číslo:', esc(b.get('parcela',''))],
+                    ['Na pozemku parcelné číslo:', esc(f"{b.get('parcela','')} (register {reg})")],
                     ['Popis bytu:', esc(b.get('popisBytu',''))],
                     ['Hodnota:', esc(f"{b.get('hodnota','')} €")],
                     ['Spoluvlastnícky podiel:', esc(b.get('podiel',''))],
