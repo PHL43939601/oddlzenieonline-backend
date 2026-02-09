@@ -2,664 +2,652 @@
 # -*- coding: utf-8 -*-
 """
 PDF Generator pre OddlženieOnline.sk
-Generuje všetky 4 dokumenty pre osobný bankrot
+Generuje 4 dokumenty pre osobný bankrot - kompatibilné s HTML formulárom
 """
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-import json
-import sys
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+import json, sys, re
 from datetime import datetime
 
-# Registrácia Slovak fonts (ak sú dostupné)
-# Pre produkciu použite DejaVu Sans alebo iný Unicode font
 try:
     pdfmetrics.registerFont(TTFont('DejaVuSans', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
     pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
     FONT = 'DejaVuSans'
     FONT_BOLD = 'DejaVuSans-Bold'
 except:
-    # Fallback na defaultné fonty
     FONT = 'Helvetica'
     FONT_BOLD = 'Helvetica-Bold'
 
+def esc(text):
+    """Escape HTML special chars for ReportLab Paragraph"""
+    if not text:
+        return ''
+    return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 class PDFGenerator:
-    """Hlavná trieda pre generovanie PDF dokumentov"""
-    
     def __init__(self, data):
-        """
-        Args:
-            data (dict): JSON údaje z formulára
-        """
         self.data = data
         self.styles = self._create_styles()
-    
+
+    def g(self, key, default=''):
+        """Get value from data safely"""
+        val = self.data.get(key, default)
+        if val is None:
+            return default
+        return str(val).strip() if val else default
+
     def _create_styles(self):
-        """Vytvorenie custom štýlov pre PDF"""
         styles = getSampleStyleSheet()
-        
-        # Nadpis dokumentu
-        styles.add(ParagraphStyle(
-            name='CustomTitle',
-            parent=styles['Title'],
-            fontName=FONT_BOLD,
-            fontSize=16,
-            textColor=colors.HexColor('#1e293b'),
-            spaceAfter=20,
-            alignment=TA_CENTER
-        ))
-        
-        # Sekcia nadpis
-        styles.add(ParagraphStyle(
-            name='SectionHeader',
-            parent=styles['Heading1'],
-            fontName=FONT_BOLD,
-            fontSize=12,
-            textColor=colors.HexColor('#2563eb'),
-            spaceAfter=10,
-            spaceBefore=15
-        ))
-        
-        # Normálny text
-        styles.add(ParagraphStyle(
-            name='CustomBody',
-            parent=styles['BodyText'],
-            fontName=FONT,
-            fontSize=10,
-            textColor=colors.HexColor('#334155'),
-            spaceAfter=6
-        ))
-        
-        # Label (bold)
-        styles.add(ParagraphStyle(
-            name='Label',
-            parent=styles['BodyText'],
-            fontName=FONT_BOLD,
-            fontSize=10,
-            textColor=colors.HexColor('#1e293b')
-        ))
-        
+        styles.add(ParagraphStyle(name='DocTitle', fontName=FONT_BOLD, fontSize=13,
+            textColor=colors.HexColor('#1e293b'), spaceAfter=6, alignment=TA_CENTER, leading=16))
+        styles.add(ParagraphStyle(name='DocSubtitle', fontName=FONT, fontSize=9,
+            textColor=colors.HexColor('#475569'), spaceAfter=16, alignment=TA_CENTER))
+        styles.add(ParagraphStyle(name='SectionH', fontName=FONT_BOLD, fontSize=10,
+            textColor=colors.HexColor('#1e3a5f'), spaceAfter=8, spaceBefore=14))
+        styles.add(ParagraphStyle(name='SubH', fontName=FONT_BOLD, fontSize=9,
+            textColor=colors.HexColor('#334155'), spaceAfter=6, spaceBefore=8))
+        styles.add(ParagraphStyle(name='Body', fontName=FONT, fontSize=9,
+            textColor=colors.HexColor('#334155'), spaceAfter=4, leading=13))
+        styles.add(ParagraphStyle(name='BodyBold', fontName=FONT_BOLD, fontSize=9,
+            textColor=colors.HexColor('#1e293b'), spaceAfter=4, leading=13))
+        styles.add(ParagraphStyle(name='Small', fontName=FONT, fontSize=8,
+            textColor=colors.HexColor('#64748b'), spaceAfter=3, leading=11))
+        styles.add(ParagraphStyle(name='Legal', fontName=FONT, fontSize=8,
+            textColor=colors.HexColor('#475569'), spaceAfter=4, leading=12))
         return styles
-    
-    # ========================================
-    # DOKUMENT 1: ŽIVOTOPIS
-    # ========================================
+
+    def _make_doc(self, filename):
+        return SimpleDocTemplate(filename, pagesize=A4,
+            rightMargin=2*cm, leftMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
+
+    def _header_table(self):
+        """Common header with debtor info"""
+        data = [
+            ['Meno:', esc(self.g('meno'))],
+            ['Priezvisko:', esc(self.g('priezvisko'))],
+            ['Titul:', esc(self.g('titul'))],
+            ['Dátum narodenia:', esc(self.g('datumNarodenia'))],
+            ['Rodné číslo:', esc(self.g('rodneCislo'))],
+            ['Trvalé bydlisko:', esc(f"{self.g('ulica')} {self.g('cisloDomu')}, {self.g('psc')} {self.g('obec')}")],
+        ]
+        t = Table(data, colWidths=[5*cm, 11*cm])
+        t.setStyle(TableStyle([
+            ('FONT', (0,0),(0,-1), FONT_BOLD, 9),
+            ('FONT', (1,0),(1,-1), FONT, 9),
+            ('TEXTCOLOR', (0,0),(-1,-1), colors.HexColor('#1e293b')),
+            ('VALIGN', (0,0),(-1,-1), 'TOP'),
+            ('BOTTOMPADDING', (0,0),(-1,-1), 4),
+            ('TOPPADDING', (0,0),(-1,-1), 2),
+        ]))
+        return t
+
+    def _field_table(self, rows):
+        """Create a standard field table"""
+        t = Table(rows, colWidths=[5.5*cm, 10.5*cm])
+        t.setStyle(TableStyle([
+            ('FONT', (0,0),(0,-1), FONT_BOLD, 9),
+            ('FONT', (1,0),(1,-1), FONT, 9),
+            ('TEXTCOLOR', (0,0),(-1,-1), colors.HexColor('#1e293b')),
+            ('VALIGN', (0,0),(-1,-1), 'TOP'),
+            ('BOTTOMPADDING', (0,0),(-1,-1), 5),
+            ('TOPPADDING', (0,0),(-1,-1), 2),
+            ('GRID', (0,0),(-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ]))
+        return t
+
+    def _item_header(self, text):
+        """Colored header row for items"""
+        t = Table([[text]], colWidths=[16*cm])
+        t.setStyle(TableStyle([
+            ('FONT', (0,0),(-1,-1), FONT_BOLD, 9),
+            ('BACKGROUND', (0,0),(-1,-1), colors.HexColor('#e0e7ff')),
+            ('TEXTCOLOR', (0,0),(-1,-1), colors.HexColor('#1e3a5f')),
+            ('BOTTOMPADDING', (0,0),(-1,-1), 6),
+            ('TOPPADDING', (0,0),(-1,-1), 6),
+            ('LEFTPADDING', (0,0),(-1,-1), 8),
+        ]))
+        return t
+
+    def _signature_block(self, story):
+        today = datetime.now().strftime('%d.%m.%Y')
+        story.append(Spacer(1, 1.2*cm))
+        story.append(Paragraph(f'V __________________ , dňa {today}', self.styles['Body']))
+        story.append(Spacer(1, 1*cm))
+        story.append(Paragraph('________________________________________', self.styles['Body']))
+        story.append(Paragraph('Podpis dlžníka', self.styles['Body']))
+
+    def _collect_dynamic(self, prefix):
+        """Collect dynamic form fields by prefix into list of dicts.
+        E.g. prefix='p' collects p_lv_0, p_obec_0, p_lv_1, p_obec_1 etc."""
+        items = {}
+        pattern = re.compile(f'^{re.escape(prefix)}_(.+?)_(\\d+)$')
+        for key, val in self.data.items():
+            m = pattern.match(key)
+            if m:
+                field_name = m.group(1)
+                idx = int(m.group(2))
+                if idx not in items:
+                    items[idx] = {}
+                items[idx][field_name] = val
+        return [items[k] for k in sorted(items.keys())]
+
+    # ============================================
+    # DOKUMENT 1: ŽIVOTOPIS DLŽNÍKA
+    # ============================================
     def generate_zivotopis(self, filename):
-        """Generuje životopis dlžníka"""
-        doc = SimpleDocTemplate(
-            filename,
-            pagesize=A4,
-            rightMargin=2*cm,
-            leftMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm
-        )
-        
+        doc = self._make_doc(filename)
         story = []
-        
-        # Nadpis
-        story.append(Paragraph("ŽIVOTOPIS DLŽNÍKA", self.styles['CustomTitle']))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Osobné údaje
-        story.append(Paragraph("1. OSOBNÉ ÚDAJE", self.styles['SectionHeader']))
-        
-        osobne_udaje = [
-            ["Meno a priezvisko:", f"{self.data.get('meno', '')} {self.data.get('priezvisko', '')}"],
-            ["Rodné číslo:", self.data.get('rodneCislo', '')],
-            ["Dátum narodenia:", self.data.get('datumNarodenia', '')],
-            ["Miesto narodenia:", self.data.get('miestoNarodenia', '')],
-            ["Štátna príslušnosť:", self.data.get('statnaPreslusnost', 'Slovenská republika')],
-            ["Rodinný stav:", self.data.get('rodinnyStav', '')],
-        ]
-        
-        table = Table(osobne_udaje, colWidths=[6*cm, 10*cm])
-        table.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), FONT_BOLD, 10),
-            ('FONT', (1, 0), (1, -1), FONT, 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        story.append(table)
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Trvalý pobyt
-        story.append(Paragraph("2. TRVALÝ POBYT", self.styles['SectionHeader']))
-        
-        adresa_data = [
-            ["Ulica a číslo:", f"{self.data.get('ulica', '')} {self.data.get('cislo', '')}"],
-            ["Obec/Mesto:", self.data.get('obec', '')],
-            ["PSČ:", self.data.get('psc', '')],
-            ["Kraj:", self.data.get('kraj', '')],
-        ]
-        
-        table2 = Table(adresa_data, colWidths=[6*cm, 10*cm])
-        table2.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), FONT_BOLD, 10),
-            ('FONT', (1, 0), (1, -1), FONT, 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        story.append(table2)
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Kontaktné údaje
-        story.append(Paragraph("3. KONTAKTNÉ ÚDAJE", self.styles['SectionHeader']))
-        
-        kontakt_data = [
-            ["Email:", self.data.get('email', '')],
-            ["Telefón:", self.data.get('telefon', '')],
-        ]
-        
-        table3 = Table(kontakt_data, colWidths=[6*cm, 10*cm])
-        table3.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), FONT_BOLD, 10),
-            ('FONT', (1, 0), (1, -1), FONT, 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        story.append(table3)
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Vzdelanie
-        story.append(Paragraph("4. VZDELANIE", self.styles['SectionHeader']))
-        story.append(Paragraph(
-            self.data.get('vzdelanie', 'Stredoškolské vzdelanie'),
-            self.styles['CustomBody']
-        ))
+
+        story.append(Paragraph('Životopis dlžníka, aktuálna životná situácia', self.styles['DocTitle']))
+        story.append(Paragraph('a zoznam spriaznených osôb', self.styles['DocTitle']))
+        story.append(Paragraph('V súlade s § 167 ods. 2 a § 168 ods. 2 zákona č. 7/2005 Z. z. o konkurze a reštrukturalizácii', self.styles['DocSubtitle']))
         story.append(Spacer(1, 0.3*cm))
-        
-        # Zamestnanie
-        story.append(Paragraph("5. ZAMESTNANIE A PRÍJEM", self.styles['SectionHeader']))
-        
-        zamest_data = [
-            ["Súčasný stav:", self.data.get('zamestnanieStav', 'Zamestnaný')],
-            ["Zamestnávateľ:", self.data.get('zamestnavatel', '')],
-            ["Pozícia:", self.data.get('pozicia', '')],
-            ["Mesačný príjem (netto):", f"{self.data.get('mesacnyPrijem', '0')} EUR"],
-        ]
-        
-        table4 = Table(zamest_data, colWidths=[6*cm, 10*cm])
-        table4.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), FONT_BOLD, 10),
-            ('FONT', (1, 0), (1, -1), FONT, 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+
+        # 1. Osobné údaje
+        story.append(Paragraph('1. Osobné údaje dlžníka', self.styles['SectionH']))
+        story.append(self._header_table())
+        story.append(Spacer(1, 0.2*cm))
+
+        # Kontakt
+        story.append(Paragraph('Kontaktné údaje:', self.styles['SubH']))
+        story.append(self._field_table([
+            ['Telefónne číslo:', esc(self.g('telefon'))],
+            ['E-mail:', esc(self.g('email'))],
         ]))
-        story.append(table4)
-        story.append(Spacer(1, 1*cm))
-        
-        # Podpis
-        story.append(Paragraph("_" * 50, self.styles['CustomBody']))
-        story.append(Paragraph("Dátum a podpis dlžníka", self.styles['CustomBody']))
-        
-        # Build PDF
+
+        # 2. Vzdelanie
+        story.append(Paragraph('2. Vzdelanie dlžníka', self.styles['SectionH']))
+        story.append(self._field_table([
+            ['Najvyššie dosiahnuté vzdelanie:', esc(self.g('vzdelanie'))],
+            ['Ukončené v roku:', esc(self.g('vzdelanieRok'))],
+            ['Odbor:', esc(self.g('vzdelanieOdbor'))],
+            ['Škola:', esc(self.g('vzdelanieSkaola'))],
+            ['Ďalšie vzdelanie, rekvalifikácia:', esc(self.g('dalsieVzdelanie'))],
+        ]))
+
+        # 3. Schopnosti
+        story.append(Paragraph('3. Schopnosti, znalosti a zručnosti dlžníka', self.styles['SectionH']))
+        story.append(self._field_table([
+            ['Jazykové znalosti:', esc(self.g('jazyky'))],
+            ['Vodičský preukaz:', esc(f"{self.g('vodicak')}, typ: {self.g('vodicakTyp')}")],
+        ]))
+
+        # 4. Zdravotný stav
+        story.append(Paragraph('4. Zdravotný stav dlžníka', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('zdravotnyStav', 'Neuvedené')), self.styles['Body']))
+
+        # 5. Pracovné skúsenosti
+        story.append(Paragraph('5. Pracovné skúsenosti dlžníka', self.styles['SectionH']))
+        praca_items = self._collect_dynamic('praca')
+        if praca_items:
+            rows = [['Od – Do', 'Zamestnávateľ', 'Pracovná pozícia']]
+            for p in praca_items:
+                rows.append([
+                    esc(f"{p.get('od','')} – {p.get('do','')}"),
+                    esc(p.get('zamestnavatel', '')),
+                    esc(p.get('pozicia', ''))
+                ])
+            t = Table(rows, colWidths=[4*cm, 6*cm, 6*cm])
+            t.setStyle(TableStyle([
+                ('FONT', (0,0),(-1,0), FONT_BOLD, 9),
+                ('FONT', (0,1),(-1,-1), FONT, 9),
+                ('BACKGROUND', (0,0),(-1,0), colors.HexColor('#e0e7ff')),
+                ('GRID', (0,0),(-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+                ('VALIGN', (0,0),(-1,-1), 'TOP'),
+                ('BOTTOMPADDING', (0,0),(-1,-1), 5),
+                ('TOPPADDING', (0,0),(-1,-1), 3),
+            ]))
+            story.append(t)
+        else:
+            story.append(Paragraph('Neuvedené', self.styles['Body']))
+
+        # 6. Sociálne postavenie
+        story.append(Paragraph('6. Sociálne postavenie dlžníka', self.styles['SectionH']))
+        soc_items = []
+        soc_map = {
+            'soc_zamestanany': 'Zamestnaný/á',
+            'soc_szco': 'Samostatne zárobkovo činná osoba',
+            'soc_dochodok': 'Poberateľ/-ka dôchodku',
+            'soc_nezamestnany': 'Dobrovoľne nezamestnaný/á',
+            'soc_uchadzac': 'Uchádzač/-ka o zamestnanie',
+            'soc_davky': 'Poberateľ/-ka sociálnych dávok',
+            'soc_materska': 'Materská / rodičovská dovolenka',
+        }
+        for key, label in soc_map.items():
+            if self.g(key):
+                soc_items.append(label)
+        if soc_items:
+            story.append(Paragraph('☒ ' + ', '.join(soc_items), self.styles['Body']))
+        ico = self.g('ico')
+        if ico:
+            story.append(Paragraph(f'→ IČO: {esc(ico)}', self.styles['Body']))
+
+        # 7. Životná situácia
+        story.append(Paragraph('7. Opíšte v stručnosti Vašu aktuálnu životnú situáciu', self.styles['SectionH']))
+
+        # Príjmy
+        story.append(Paragraph('Moje príjmy:', self.styles['SubH']))
+        prijem_items = self._collect_dynamic('prijem')
+        if prijem_items:
+            rows = [['Suma (€)', 'Zdroj']]
+            for p in prijem_items:
+                rows.append([esc(f"{p.get('suma','')} €"), esc(p.get('zdroj',''))])
+            t = Table(rows, colWidths=[5*cm, 11*cm])
+            t.setStyle(TableStyle([
+                ('FONT',(0,0),(-1,0),FONT_BOLD,9),('FONT',(0,1),(-1,-1),FONT,9),
+                ('BACKGROUND',(0,0),(-1,0),colors.HexColor('#e0e7ff')),
+                ('GRID',(0,0),(-1,-1),0.5,colors.HexColor('#e2e8f0')),
+                ('BOTTOMPADDING',(0,0),(-1,-1),4),('TOPPADDING',(0,0),(-1,-1),3),
+            ]))
+            story.append(t)
+
+        # Výdavky
+        story.append(Paragraph('Moje výdavky:', self.styles['SubH']))
+        vydavky = [
+            ['Bývanie (nájom, energie):', esc(f"{self.g('vydaj_byvanie','0')} €")],
+            ['Strava:', esc(f"{self.g('vydaj_strava','0')} €")],
+            ['Hygiena a ošatenie:', esc(f"{self.g('vydaj_hygiena','0')} €")],
+            ['Zdravotná starostlivosť:', esc(f"{self.g('vydaj_zdravie','0')} €")],
+            ['Starostlivosť o deti:', esc(f"{self.g('vydaj_deti','0')} €")],
+            ['Poistné:', esc(f"{self.g('vydaj_poistne','0')} €")],
+            ['Cestovné:', esc(f"{self.g('vydaj_cestovne','0')} €")],
+            ['Splácanie dlhov:', esc(f"{self.g('vydaj_dlhy','0')} €")],
+        ]
+        story.append(self._field_table(vydavky))
+
+        # Vznik dlhov
+        story.append(Paragraph('Ako vznikli moje dlhy:', self.styles['SubH']))
+        story.append(Paragraph(esc(self.g('vznikDlhov', 'Neuvedené')), self.styles['Body']))
+
+        # 8. Spriaznené osoby
+        story.append(Paragraph('8. Zoznam osôb spriaznených s dlžníkom', self.styles['SectionH']))
+
+        # 8.1 Spoločná domácnosť
+        story.append(Paragraph('8.1. Spoločnú domácnosť tvorím s týmito osobami:', self.styles['SubH']))
+        story.append(self._field_table([
+            ['Manžel/ka, druh/družka:', esc(self.g('manzel'))],
+            ['Deti:', esc(self.g('deti'))],
+            ['Iné osoby:', esc(self.g('ineOsoby', '–'))],
+        ]))
+
+        # 8.2 Blízke osoby
+        story.append(Paragraph('8.2. Blízke osoby mimo domácnosti:', self.styles['SubH']))
+        blizke = self._collect_dynamic('blizka')
+        if blizke:
+            rows = [['Meno a priezvisko', 'Vzťah', 'Adresa']]
+            for b in blizke:
+                rows.append([esc(b.get('meno','')), esc(b.get('vztah','')), esc(b.get('adresa',''))])
+            t = Table(rows, colWidths=[5.5*cm, 4*cm, 6.5*cm])
+            t.setStyle(TableStyle([
+                ('FONT',(0,0),(-1,0),FONT_BOLD,9),('FONT',(0,1),(-1,-1),FONT,9),
+                ('BACKGROUND',(0,0),(-1,0),colors.HexColor('#e0e7ff')),
+                ('GRID',(0,0),(-1,-1),0.5,colors.HexColor('#e2e8f0')),
+                ('BOTTOMPADDING',(0,0),(-1,-1),4),('TOPPADDING',(0,0),(-1,-1),3),
+            ]))
+            story.append(t)
+        else:
+            story.append(Paragraph('Neuvedené', self.styles['Body']))
+
+        # 8.3 Účasti v PO
+        story.append(Paragraph('8.3. Kvalifikované účasti v právnických osobách:', self.styles['SubH']))
+        story.append(Paragraph('a) Moje účasti:', self.styles['BodyBold']))
+        story.append(Paragraph(esc(self.g('mojeUcasti', '(žiadne)')), self.styles['Body']))
+        story.append(Paragraph('b) Účasti blízkych osôb:', self.styles['BodyBold']))
+        story.append(Paragraph(esc(self.g('blizkeUcasti', '(žiadne)')), self.styles['Body']))
+
+        # Čestné prehlásenie
+        story.append(Spacer(1, 0.5*cm))
+        story.append(Paragraph(
+            'Čestne vyhlasujem, že som platobne neschopný/á, do tohto stavu som sa nepriviedol/a úmyselne, '
+            'pri preberaní záväzkov som sa nespoliehal/a na to, že svoje dlhy budem riešiť oddlžením a nemám '
+            'v úmysle poškodiť svojho/ich veriteľa/ov alebo zvýhodniť niektorého/ých veriteľa/ov.',
+            self.styles['Legal']))
+        story.append(Paragraph(
+            'Čestne vyhlasujem, že na území Slovenskej republiky mám centrum hlavných záujmov.',
+            self.styles['Legal']))
+        story.append(Paragraph(
+            'Čestne vyhlasujem, že všetky údaje uvedené v žiadosti sú pravdivé a úplné a som si vedomý/á '
+            'právnych následkov v prípade úmyselného uvedenia nepravdivých alebo neúplných údajov.',
+            self.styles['Legal']))
+
+        self._signature_block(story)
         doc.build(story)
         return filename
-    
-    # ========================================
+
+    # ============================================
     # DOKUMENT 2: ZOZNAM MAJETKU
-    # ========================================
+    # ============================================
     def generate_majetok(self, filename):
-        """Generuje zoznam majetku"""
-        doc = SimpleDocTemplate(
-            filename,
-            pagesize=A4,
-            rightMargin=2*cm,
-            leftMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm
-        )
-        
+        doc = self._make_doc(filename)
         story = []
-        
-        # Nadpis
-        story.append(Paragraph("ZOZNAM MAJETKU DLŽNÍKA", self.styles['CustomTitle']))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Údaje o dlžníkovi
-        story.append(Paragraph(
-            f"<b>Dlžník:</b> {self.data.get('meno', '')} {self.data.get('priezvisko', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Paragraph(
-            f"<b>Rodné číslo:</b> {self.data.get('rodneCislo', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Nehnuteľnosti
-        story.append(Paragraph("1. NEHNUTEĽNOSTI", self.styles['SectionHeader']))
-        
-        nehnutelnosti = self.data.get('nehnutelnosti', [])
-        if nehnutelnosti:
-            for i, neh in enumerate(nehnutelnosti, 1):
-                neh_data = [
-                    [f"Nehnuteľnosť #{i}"],
-                    ["Typ:", neh.get('typ', '')],
-                    ["Adresa:", neh.get('adresa', '')],
-                    ["Podiel vlastníctva:", neh.get('podiel', '')],
-                    ["Odhadovaná hodnota:", f"{neh.get('hodnota', '0')} EUR"],
-                    ["Poznámka:", neh.get('poznamka', '')],
-                ]
-                
-                table = Table(neh_data, colWidths=[6*cm, 10*cm])
-                table.setStyle(TableStyle([
-                    ('FONT', (0, 0), (-1, 0), FONT_BOLD, 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0e7ff')),
-                    ('FONT', (0, 1), (0, -1), FONT_BOLD, 10),
-                    ('FONT', (1, 1), (1, -1), FONT, 10),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+
+        story.append(Paragraph('Zoznam majetku dlžníka', self.styles['DocTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        story.append(self._header_table())
+        story.append(Spacer(1, 0.3*cm))
+
+        # Pozemky
+        story.append(Paragraph('Pozemok', self.styles['SectionH']))
+        pozemky = self._collect_dynamic('p')
+        if pozemky:
+            for i, p in enumerate(pozemky, 1):
+                story.append(self._item_header(f'Pozemok č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(p.get('lv',''))],
+                    ['Obec:', esc(p.get('obec',''))],
+                    ['Katastrálne územie:', esc(p.get('ku',''))],
+                    ['Parcela č.:', esc(p.get('parcela',''))],
+                    ['Výmera (m²):', esc(p.get('vymera',''))],
+                    ['Druh pozemku:', esc(p.get('druh',''))],
+                    ['Hodnota:', esc(f"{p.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(p.get('podiel',''))],
                 ]))
-                story.append(table)
-                story.append(Spacer(1, 0.3*cm))
+                story.append(Spacer(1, 0.2*cm))
         else:
-            story.append(Paragraph("Žiadne nehnuteľnosti", self.styles['CustomBody']))
-        
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Motorové vozidlá
-        story.append(Paragraph("2. MOTOROVÉ VOZIDLÁ", self.styles['SectionHeader']))
-        
-        vozidla = self.data.get('vozidla', [])
-        if vozidla:
-            for i, voz in enumerate(vozidla, 1):
-                voz_data = [
-                    [f"Vozidlo #{i}"],
-                    ["Typ:", voz.get('typ', '')],
-                    ["Značka/Model:", voz.get('znacka', '')],
-                    ["ŠPZ:", voz.get('spz', '')],
-                    ["Rok výroby:", voz.get('rok', '')],
-                    ["Odhadovaná hodnota:", f"{voz.get('hodnota', '0')} EUR"],
-                ]
-                
-                table = Table(voz_data, colWidths=[6*cm, 10*cm])
-                table.setStyle(TableStyle([
-                    ('FONT', (0, 0), (-1, 0), FONT_BOLD, 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0e7ff')),
-                    ('FONT', (0, 1), (0, -1), FONT_BOLD, 10),
-                    ('FONT', (1, 1), (1, -1), FONT, 10),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Stavby
+        story.append(Paragraph('Stavba', self.styles['SectionH']))
+        stavby = self._collect_dynamic('s')
+        if stavby:
+            for i, s in enumerate(stavby, 1):
+                story.append(self._item_header(f'Stavba č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(s.get('lv',''))],
+                    ['Obec:', esc(s.get('obec',''))],
+                    ['Katastrálne územie:', esc(s.get('ku',''))],
+                    ['Súpisné číslo:', esc(s.get('supisne',''))],
+                    ['Orientačné číslo:', esc(s.get('orient',''))],
+                    ['Na pozemku parcelné číslo:', esc(s.get('parcela',''))],
+                    ['Popis stavby:', esc(s.get('popis',''))],
+                    ['Hodnota:', esc(f"{s.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(s.get('podiel',''))],
                 ]))
-                story.append(table)
-                story.append(Spacer(1, 0.3*cm))
+                story.append(Spacer(1, 0.2*cm))
         else:
-            story.append(Paragraph("Žiadne motorové vozidlá", self.styles['CustomBody']))
-        
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Bankové účty
-        story.append(Paragraph("3. BANKOVÉ ÚČTY A SPORENIE", self.styles['SectionHeader']))
-        
-        ucty = self.data.get('bankyUcty', [])
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Byty
+        story.append(Paragraph('Byt a nebytový priestor', self.styles['SectionH']))
+        byty = self._collect_dynamic('b')
+        if byty:
+            for i, b in enumerate(byty, 1):
+                story.append(self._item_header(f'Byt č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(b.get('lv',''))],
+                    ['Obec:', esc(b.get('obec',''))],
+                    ['Katastrálne územie:', esc(b.get('ku',''))],
+                    ['Vchod:', esc(b.get('vchod',''))],
+                    ['Poschodie:', esc(b.get('poschodie',''))],
+                    ['Číslo bytu:', esc(b.get('cislo',''))],
+                    ['Súpisné číslo:', esc(b.get('supisne',''))],
+                    ['Orientačné číslo:', esc(b.get('orient',''))],
+                    ['Na pozemku parcelné číslo:', esc(b.get('parcela',''))],
+                    ['Druh pozemku:', esc(b.get('druh',''))],
+                    ['Popis stavby:', esc(b.get('popisStavby',''))],
+                    ['Podiel na spoločných častiach:', esc(b.get('podielSpoloc',''))],
+                    ['Popis bytu:', esc(b.get('popisBytu',''))],
+                    ['Hodnota:', esc(f"{b.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(b.get('podiel',''))],
+                ]))
+                story.append(Spacer(1, 0.2*cm))
+        else:
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Hnuteľné veci
+        story.append(Paragraph('Hnuteľná vec', self.styles['SectionH']))
+        hnutelne = self._collect_dynamic('h')
+        if hnutelne:
+            for i, h in enumerate(hnutelne, 1):
+                story.append(self._item_header(f'Hnuteľná vec č. {i}'))
+                story.append(self._field_table([
+                    ['Popis:', esc(h.get('popis',''))],
+                    ['Výrobné číslo / VIN:', esc(h.get('vin',''))],
+                    ['Evidenčné číslo / ŠPZ:', esc(h.get('spz',''))],
+                    ['Kde sa nachádza:', esc(h.get('kde',''))],
+                    ['Hodnota:', esc(f"{h.get('hodnota','')} €")],
+                ]))
+                story.append(Spacer(1, 0.2*cm))
+        else:
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Účty
+        story.append(Paragraph('Pohľadávka z účtu', self.styles['SectionH']))
+        ucty = self._collect_dynamic('ucet')
         if ucty:
-            for i, ucet in enumerate(ucty, 1):
-                ucet_data = [
-                    [f"Účet #{i}"],
-                    ["Banka:", ucet.get('banka', '')],
-                    ["Číslo účtu:", ucet.get('cislo', '')],
-                    ["Zostatok:", f"{ucet.get('zostatok', '0')} EUR"],
-                ]
-                
-                table = Table(ucet_data, colWidths=[6*cm, 10*cm])
-                table.setStyle(TableStyle([
-                    ('FONT', (0, 0), (-1, 0), FONT_BOLD, 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0e7ff')),
-                    ('FONT', (0, 1), (0, -1), FONT_BOLD, 10),
-                    ('FONT', (1, 1), (1, -1), FONT, 10),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            for i, u in enumerate(ucty, 1):
+                story.append(self._item_header(f'Účet č. {i}'))
+                story.append(self._field_table([
+                    ['Číslo účtu / IBAN:', esc(u.get('iban',''))],
+                    ['Banka:', esc(u.get('banka',''))],
+                    ['Zostatok:', esc(f"{u.get('zostatok','')} €")],
                 ]))
-                story.append(table)
-                story.append(Spacer(1, 0.3*cm))
+                story.append(Spacer(1, 0.2*cm))
         else:
-            story.append(Paragraph("Žiadne bankové účty", self.styles['CustomBody']))
-        
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Iný majetok
-        story.append(Paragraph("4. INÝ MAJETOK", self.styles['SectionHeader']))
-        
-        iny_majetok = self.data.get('inyMajetok', '')
-        if iny_majetok:
-            story.append(Paragraph(iny_majetok, self.styles['CustomBody']))
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Iné
+        story.append(Paragraph('Iná majetková hodnota', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('ineMajetkoveHodnoty', '(žiadne)')), self.styles['Body']))
+
+        # Zabezpečovacie práva
+        story.append(Paragraph('Zabezpečovacie práva k majetku', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('zabezpPrava', '(žiadne)')), self.styles['Body']))
+
+        # Súdne spory
+        story.append(Paragraph('Súdne spory súvisiace s majetkom', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('sudneSpory', 'nemám')), self.styles['Body']))
+
+        # Obydlie
+        story.append(Paragraph('Obydlie', self.styles['SectionH']))
+        if self.g('uplatnujeObydlie'):
+            story.append(Paragraph(f'☒ Uplatňujem si nepostihnuteľnú hodnotu obydlia na: {esc(self.g("obydlieVec"))}', self.styles['Body']))
         else:
-            story.append(Paragraph("Žiadny iný majetok", self.styles['CustomBody']))
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Celková hodnota
-        celkova_hodnota = self.data.get('celkovaHodnotaMajetku', '0')
+            story.append(Paragraph('☐ Neuplatňujem si nepostihnuteľnú hodnotu obydlia', self.styles['Body']))
+
+        story.append(Paragraph(f'BSM: {esc(self.g("bsm", "Nie"))}', self.styles['Body']))
+
+        # Prehlásenie
+        story.append(Spacer(1, 0.3*cm))
         story.append(Paragraph(
-            f"<b>CELKOVÁ ODHADOVANÁ HODNOTA MAJETKU: {celkova_hodnota} EUR</b>",
-            self.styles['SectionHeader']
-        ))
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Podpis
-        story.append(Paragraph("_" * 50, self.styles['CustomBody']))
-        story.append(Paragraph("Dátum a podpis dlžníka", self.styles['CustomBody']))
-        
-        # Build PDF
+            'Vyhlasujem, že v súčasnosti vlastním majetok uvedený v prílohe. Vyhlasujem, že všetky údaje '
+            'uvedené v zozname majetku sú pravdivé, úplné a som si vedomý právnych následkov v prípade '
+            'úmyselného uvedenia nepravdivých alebo neúplných údajov.',
+            self.styles['Legal']))
+
+        self._signature_block(story)
         doc.build(story)
         return filename
-    
-    # ========================================
-    # DOKUMENT 3: HISTÓRIA NADOBUDNUTIA MAJETKU
-    # ========================================
+
+    # ============================================
+    # DOKUMENT 3: HISTÓRIA MAJETKU (3 roky)
+    # ============================================
     def generate_majetok_historia(self, filename):
-        """Generuje históriu nadobudnutia majetku"""
-        doc = SimpleDocTemplate(
-            filename,
-            pagesize=A4,
-            rightMargin=2*cm,
-            leftMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm
-        )
-        
+        doc = self._make_doc(filename)
         story = []
-        
-        # Nadpis
-        story.append(Paragraph(
-            "HISTÓRIA NADOBUDNUTIA A PREVODU MAJETKU",
-            self.styles['CustomTitle']
-        ))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Údaje o dlžníkovi
-        story.append(Paragraph(
-            f"<b>Dlžník:</b> {self.data.get('meno', '')} {self.data.get('priezvisko', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Paragraph(
-            f"<b>Rodné číslo:</b> {self.data.get('rodneCislo', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Spacer(1, 0.5*cm))
-        
-        story.append(Paragraph(
-            "<b>Časové obdobie:</b> Posledných 5 rokov pred podaním návrhu",
-            self.styles['CustomBody']
-        ))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # História transakcií
-        story.append(Paragraph("ZOZNAM TRANSAKCIÍ", self.styles['SectionHeader']))
-        
-        transakcie = self.data.get('historiaTransakcii', [])
-        
-        if transakcie:
-            for i, trans in enumerate(transakcie, 1):
-                trans_data = [
-                    [f"Transakcia #{i}"],
-                    ["Dátum:", trans.get('datum', '')],
-                    ["Typ transakcie:", trans.get('typ', '')],
-                    ["Predmet:", trans.get('predmet', '')],
-                    ["Hodnota:", f"{trans.get('hodnota', '0')} EUR"],
-                    ["Druhá strana:", trans.get('druhaStrana', '')],
-                    ["Dôvod/Účel:", trans.get('dovod', '')],
-                ]
-                
-                table = Table(trans_data, colWidths=[6*cm, 10*cm])
-                table.setStyle(TableStyle([
-                    ('FONT', (0, 0), (-1, 0), FONT_BOLD, 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#fef3c7')),
-                    ('FONT', (0, 1), (0, -1), FONT_BOLD, 10),
-                    ('FONT', (1, 1), (1, -1), FONT, 10),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+
+        story.append(Paragraph('Zoznam majetku väčšej hodnoty, ktorý dlžník', self.styles['DocTitle']))
+        story.append(Paragraph('vlastnil v posledných troch rokoch', self.styles['DocTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        story.append(self._header_table())
+        story.append(Spacer(1, 0.3*cm))
+
+        # Hist pozemky
+        story.append(Paragraph('Pozemok', self.styles['SectionH']))
+        hp = self._collect_dynamic('hp')
+        if hp:
+            for i, p in enumerate(hp, 1):
+                story.append(self._item_header(f'Pozemok č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(p.get('lv',''))],
+                    ['Obec:', esc(p.get('obec',''))],
+                    ['Katastrálne územie:', esc(p.get('ku',''))],
+                    ['Parcela č.:', esc(p.get('parcela',''))],
+                    ['Výmera (m²):', esc(p.get('vymera',''))],
+                    ['Druh pozemku:', esc(p.get('druh',''))],
+                    ['Hodnota:', esc(f"{p.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(p.get('podiel',''))],
                 ]))
-                story.append(table)
-                story.append(Spacer(1, 0.3*cm))
+                story.append(Spacer(1, 0.2*cm))
         else:
-            story.append(Paragraph(
-                "V posledných 5 rokoch neboli vykonané žiadne významné transakcie s majetkom.",
-                self.styles['CustomBody']
-            ))
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Čestné prehlásenie
-        story.append(Paragraph("ČESTNÉ PREHLÁSENIE", self.styles['SectionHeader']))
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Hist stavby
+        story.append(Paragraph('Stavba', self.styles['SectionH']))
+        hs = self._collect_dynamic('hs')
+        if hs:
+            for i, s in enumerate(hs, 1):
+                story.append(self._item_header(f'Stavba č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(s.get('lv',''))],
+                    ['Obec:', esc(s.get('obec',''))],
+                    ['Katastrálne územie:', esc(s.get('ku',''))],
+                    ['Súpisné číslo:', esc(s.get('supisne',''))],
+                    ['Orientačné číslo:', esc(s.get('orient',''))],
+                    ['Na pozemku parcelné číslo:', esc(s.get('parcela',''))],
+                    ['Popis stavby:', esc(s.get('popis',''))],
+                    ['Hodnota:', esc(f"{s.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(s.get('podiel',''))],
+                ]))
+        else:
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Hist byty
+        story.append(Paragraph('Byt a nebytový priestor', self.styles['SectionH']))
+        hb = self._collect_dynamic('hb')
+        if hb:
+            for i, b in enumerate(hb, 1):
+                story.append(self._item_header(f'Byt č. {i}'))
+                story.append(self._field_table([
+                    ['List vlastníctva č.:', esc(b.get('lv',''))],
+                    ['Obec:', esc(b.get('obec',''))],
+                    ['Katastrálne územie:', esc(b.get('ku',''))],
+                    ['Vchod:', esc(b.get('vchod',''))],
+                    ['Poschodie:', esc(b.get('poschodie',''))],
+                    ['Číslo bytu:', esc(b.get('cislo',''))],
+                    ['Súpisné číslo:', esc(b.get('supisne',''))],
+                    ['Orientačné číslo:', esc(b.get('orient',''))],
+                    ['Na pozemku parcelné číslo:', esc(b.get('parcela',''))],
+                    ['Popis bytu:', esc(b.get('popisBytu',''))],
+                    ['Hodnota:', esc(f"{b.get('hodnota','')} €")],
+                    ['Spoluvlastnícky podiel:', esc(b.get('podiel',''))],
+                ]))
+        else:
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Hist hnuteľné
+        story.append(Paragraph('Hnuteľná vec', self.styles['SectionH']))
+        hh = self._collect_dynamic('hh')
+        if hh:
+            for i, h in enumerate(hh, 1):
+                story.append(self._item_header(f'Hnuteľná vec č. {i}'))
+                story.append(self._field_table([
+                    ['Popis:', esc(h.get('popis',''))],
+                    ['VIN:', esc(h.get('vin',''))],
+                    ['ŠPZ:', esc(h.get('spz',''))],
+                    ['Kde sa nachádza:', esc(h.get('kde',''))],
+                    ['Hodnota:', esc(f"{h.get('hodnota','')} €")],
+                ]))
+        else:
+            story.append(Paragraph('(žiadne)', self.styles['Body']))
+
+        # Iné
+        story.append(Paragraph('Iné (cenné papiere, pohľadávky, účty)', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('histIne', '(žiadne)')), self.styles['Body']))
+
+        # Zabezp. práva + spory
+        story.append(Paragraph('Zabezpečovacie práva k majetku', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('histZabezp', '(žiadne)')), self.styles['Body']))
+        story.append(Paragraph('Súdne spory súvisiace s majetkom', self.styles['SectionH']))
+        story.append(Paragraph(esc(self.g('histSpory', '(žiadne)')), self.styles['Body']))
+
+        # Prehlásenie
+        story.append(Spacer(1, 0.3*cm))
         story.append(Paragraph(
-            "Prehlasujem, že som uviedol všetky podstatné transakcie s majetkom "
-            "za posledných 5 rokov pred podaním návrhu na vyhlásenie konkurzu. "
-            "Uvedené údaje sú pravdivé a úplné.",
-            self.styles['CustomBody']
-        ))
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Podpis
-        story.append(Paragraph("_" * 50, self.styles['CustomBody']))
-        story.append(Paragraph("Dátum a podpis dlžníka", self.styles['CustomBody']))
-        
-        # Build PDF
+            'Vyhlasujem, že všetky údaje uvedené v zozname majetku väčšej hodnoty, ktorý som vlastnil '
+            'v posledných troch rokoch, sú pravdivé, úplné a som si vedomý právnych následkov v prípade '
+            'úmyselného uvedenia nepravdivých alebo neúplných údajov.',
+            self.styles['Legal']))
+
+        self._signature_block(story)
         doc.build(story)
         return filename
-    
-    # ========================================
+
+    # ============================================
     # DOKUMENT 4: ZOZNAM VERITEĽOV
-    # ========================================
+    # ============================================
     def generate_veritelia(self, filename):
-        """Generuje zoznam veriteľov a záväzkov"""
-        doc = SimpleDocTemplate(
-            filename,
-            pagesize=A4,
-            rightMargin=2*cm,
-            leftMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm
-        )
-        
+        doc = self._make_doc(filename)
         story = []
-        
-        # Nadpis
-        story.append(Paragraph("ZOZNAM VERITEĽOV A ZÁVÄZKOV", self.styles['CustomTitle']))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Údaje o dlžníkovi
-        story.append(Paragraph(
-            f"<b>Dlžník:</b> {self.data.get('meno', '')} {self.data.get('priezvisko', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Paragraph(
-            f"<b>Rodné číslo:</b> {self.data.get('rodneCislo', '')}",
-            self.styles['CustomBody']
-        ))
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Zoznam veriteľov
-        story.append(Paragraph("ZOZNAM VERITEĽOV", self.styles['SectionHeader']))
-        
-        veritelia = self.data.get('veritelia', [])
-        
+
+        story.append(Paragraph('Zoznam veriteľov dlžníka', self.styles['DocTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        story.append(self._header_table())
+        story.append(Spacer(1, 0.3*cm))
+
+        veritelia = self._collect_dynamic('ver')
         if veritelia:
-            for i, veritel in enumerate(veritelia, 1):
-                ver_data = [
-                    [f"Veriteľ #{i}"],
-                    ["Názov/Meno:", veritel.get('nazov', '')],
-                    ["Adresa:", veritel.get('adresa', '')],
-                    ["IČO:", veritel.get('ico', 'Neuvedené')],
-                    ["Typ záväzku:", veritel.get('typZavazku', '')],
-                    ["Výška dlhu:", f"{veritel.get('vyskaD lhu', '0')} EUR"],
-                    ["Zabezpečený dlh:", veritel.get('zabezpeceny', 'Nie')],
-                    ["Poznámka:", veritel.get('poznamka', '')],
-                ]
-                
-                table = Table(ver_data, colWidths=[6*cm, 10*cm])
-                table.setStyle(TableStyle([
-                    ('FONT', (0, 0), (-1, 0), FONT_BOLD, 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#fee2e2')),
-                    ('FONT', (0, 1), (0, -1), FONT_BOLD, 10),
-                    ('FONT', (1, 1), (1, -1), FONT, 10),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            for i, v in enumerate(veritelia, 1):
+                story.append(self._item_header(f'Veriteľ č. {i}'))
+                story.append(self._field_table([
+                    ['Názov / Meno:', esc(v.get('nazov',''))],
+                    ['IČO / Dátum narodenia:', esc(v.get('ico',''))],
+                    ['Ulica (trvalé bydlisko / sídlo):', esc(v.get('ulica',''))],
+                    ['Súpisné číslo:', esc(v.get('supisne',''))],
+                    ['Obec:', esc(v.get('obec',''))],
+                    ['PSČ:', esc(v.get('psc',''))],
+                    ['Štát:', esc(v.get('stat','SR'))],
                 ]))
-                story.append(table)
-                story.append(Spacer(1, 0.3*cm))
+                story.append(Spacer(1, 0.2*cm))
         else:
-            story.append(Paragraph("Žiadni veritelia neuvedení", self.styles['CustomBody']))
-        
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Celková suma dlhov
-        celkovy_dlh = self.data.get('celkovyDlh', '0')
+            story.append(Paragraph('Žiadni veritelia neuvedení', self.styles['Body']))
+
+        # Prehlásenie
+        story.append(Spacer(1, 0.3*cm))
         story.append(Paragraph(
-            f"<b>CELKOVÁ VÝŠKA ZÁVÄZKOV: {celkovy_dlh} EUR</b>",
-            self.styles['SectionHeader']
-        ))
-        
-        story.append(Spacer(1, 0.5*cm))
-        
-        # Rozdelenie dlhov
-        story.append(Paragraph("ROZDELENIE ZÁVÄZKOV", self.styles['SectionHeader']))
-        
-        rozdelenie = [
-            ["Zabezpečené záväzky:", f"{self.data.get('zabezpeceneDlhy', '0')} EUR"],
-            ["Nezabezpečené záväzky:", f"{self.data.get('nezabezpeceneDlhy', '0')} EUR"],
-            ["Exekúcie:", f"{self.data.get('pocetExekucii', '0')} ks"],
-        ]
-        
-        table = Table(rozdelenie, colWidths=[8*cm, 8*cm])
-        table.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), FONT_BOLD, 10),
-            ('FONT', (1, 0), (1, -1), FONT, 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#1e293b')),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(table)
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Čestné prehlásenie
-        story.append(Paragraph("ČESTNÉ PREHLÁSENIE", self.styles['SectionHeader']))
-        story.append(Paragraph(
-            "Prehlasujem, že som uviedol všetkých svojich veriteľov a všetky záväzky. "
-            "Uvedené údaje sú pravdivé a úplné podľa môjho najlepšieho vedomia.",
-            self.styles['CustomBody']
-        ))
-        
-        story.append(Spacer(1, 1*cm))
-        
-        # Podpis
-        story.append(Paragraph("_" * 50, self.styles['CustomBody']))
-        story.append(Paragraph("Dátum a podpis dlžníka", self.styles['CustomBody']))
-        
-        # Build PDF
+            'Vyhlasujem, že všetky údaje uvedené v zozname veriteľov sú pravdivé, úplné a že som si vedomý '
+            'právnych následkov v prípade úmyselného uvedenia nepravdivých alebo neúplných údajov.',
+            self.styles['Legal']))
+
+        self._signature_block(story)
         doc.build(story)
         return filename
-    
+
     def generate_all(self, output_dir='.'):
-        """Generuje všetky 4 PDF dokumenty"""
-        meno = self.data.get('meno', 'Dlznik')
-        priezvisko = self.data.get('priezvisko', 'Neznamy')
-        
+        meno = self.g('meno', 'Dlznik')
+        priezvisko = self.g('priezvisko', 'Neznamy')
         files = {
             'zivotopis': f"{output_dir}/Zivotopis_{meno}_{priezvisko}.pdf",
             'majetok': f"{output_dir}/Majetok_{meno}_{priezvisko}.pdf",
             'historia': f"{output_dir}/Majetok_Historia_{meno}_{priezvisko}.pdf",
             'veritelia': f"{output_dir}/Veritelia_{meno}_{priezvisko}.pdf",
         }
-        
-        try:
-            self.generate_zivotopis(files['zivotopis'])
-            self.generate_majetok(files['majetok'])
-            self.generate_majetok_historia(files['historia'])
-            self.generate_veritelia(files['veritelia'])
-            
-            return files
-        except Exception as e:
-            print(f"Chyba pri generovaní PDF: {e}", file=sys.stderr)
-            raise
+        self.generate_zivotopis(files['zivotopis'])
+        self.generate_majetok(files['majetok'])
+        self.generate_majetok_historia(files['historia'])
+        self.generate_veritelia(files['veritelia'])
+        return files
 
 
-# ========================================
-# MAIN - Použitie
-# ========================================
 if __name__ == '__main__':
-    # Príklad testovacích dát
-    test_data = {
-        'meno': 'Ján',
-        'priezvisko': 'Novák',
-        'rodneCislo': '850315/1234',
-        'datumNarodenia': '15.03.1985',
-        'miestoNarodenia': 'Bratislava',
-        'rodinnyStav': 'Ženatý',
-        'ulica': 'Hlavná',
-        'cislo': '123',
-        'obec': 'Bratislava',
-        'psc': '811 01',
-        'kraj': 'Bratislavský',
-        'email': 'jan.novak@email.sk',
-        'telefon': '+421 901 234 567',
-        'vzdelanie': 'Stredoškolské s maturitou',
-        'zamestnanieStav': 'Zamestnaný',
-        'zamestnavatel': 'ABC s.r.o.',
-        'pozicia': 'Operátor',
-        'mesacnyPrijem': '1200',
-        'nehnutelnosti': [],
-        'vozidla': [],
-        'bankyUcty': [],
-        'inyMajetok': 'Žiadny',
-        'celkovaHodnotaMajetku': '0',
-        'historiaTransakcii': [],
-        'veritelia': [
-            {
-                'nazov': 'Banka XYZ',
-                'adresa': 'Bankova 1, Bratislava',
-                'ico': '12345678',
-                'typZavazku': 'Úver',
-                'vyskaDlhu': '15000',
-                'zabezpeceny': 'Nie',
-                'poznamka': 'Spotrebný úver'
-            }
-        ],
-        'celkovyDlh': '15000',
-        'zabezpeceneDlhy': '0',
-        'nezabezpeceneDlhy': '15000',
-        'pocetExekucii': '2'
-    }
-    
-    # Ak sú dáta v JSON formáte z argumentu
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r', encoding='utf-8') as f:
             data = json.load(f)
     else:
-        data = test_data
-    
-    # Generovanie PDF
+        data = {'meno': 'Test', 'priezvisko': 'User', 'rodneCislo': '000000/0000',
+                'datumNarodenia': '01.01.2000', 'email': 'test@test.sk', 'telefon': '+421900000000',
+                'ulica': 'Testová', 'cisloDomu': '1', 'obec': 'Nitra', 'psc': '94901'}
+
     generator = PDFGenerator(data)
     output_dir = sys.argv[2] if len(sys.argv) > 2 else '/tmp'
     files = generator.generate_all(output_dir)
-    
     print("PDF dokumenty vygenerované:")
     for key, path in files.items():
         print(f"  {key}: {path}")
