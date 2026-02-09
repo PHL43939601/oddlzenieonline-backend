@@ -31,6 +31,16 @@ def esc(text):
         return ''
     return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
+def format_date(text):
+    """Convert YYYY-MM-DD to DD.MM.YYYY, leave other formats unchanged"""
+    if not text:
+        return ''
+    text = str(text).strip()
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', text)
+    if m:
+        return f'{m.group(3)}.{m.group(2)}.{m.group(1)}'
+    return text
+
 class PDFGenerator:
     def __init__(self, data):
         self.data = data
@@ -73,7 +83,7 @@ class PDFGenerator:
             ['Meno:', esc(self.g('meno'))],
             ['Priezvisko:', esc(self.g('priezvisko'))],
             ['Titul:', esc(self.g('titul'))],
-            ['Dátum narodenia:', esc(self.g('datumNarodenia'))],
+            ['Dátum narodenia:', esc(format_date(self.g('datumNarodenia')))],
             ['Rodné číslo:', esc(self.g('rodneCislo'))],
             ['Trvalé bydlisko:', esc(f"{self.g('ulica')} {self.g('cisloDomu')}, {self.g('psc')} {self.g('obec')}")],
         ]
@@ -237,6 +247,13 @@ class PDFGenerator:
                 extra = f'    {esc(self.g("inePostavenie"))}'
             story.append(Paragraph(f'{checked} {label}{extra}', self.styles['Body']))
 
+        # Rodinný stav a BSM
+        story.append(Spacer(1, 0.2*cm))
+        story.append(self._field_table([
+            ['Rodinný stav:', esc(self.g('rodinnyStav'))],
+            ['BSM:', esc(self.g('bsm', 'Nie'))],
+        ]))
+
         # 7. Životná situácia
         story.append(Paragraph('7. Opíšte v stručnosti Vašu aktuálnu životnú situáciu', self.styles['SectionH']))
 
@@ -317,7 +334,7 @@ class PDFGenerator:
                 soc_text = ', '.join(soc_parts) if soc_parts else '–'
                 story.append(self._field_table([
                     ['Meno a priezvisko:', esc(osoba.get('meno', ''))],
-                    ['Dátum narodenia:', esc(osoba.get('datnar', ''))],
+                    ['Dátum narodenia:', esc(format_date(osoba.get('datnar', '')))],
                     ['Vzťah:', esc(osoba.get('vztah', ''))],
                     ['Sociálne postavenie:', esc(soc_text)],
                 ]))
@@ -502,8 +519,6 @@ class PDFGenerator:
             story.append(Paragraph(f'☒ Uplatňujem si nepostihnuteľnú hodnotu obydlia na: {esc(self.g("obydlieVec"))}', self.styles['Body']))
         else:
             story.append(Paragraph('☐ Neuplatňujem si nepostihnuteľnú hodnotu obydlia', self.styles['Body']))
-
-        story.append(Paragraph(f'BSM: {esc(self.g("bsm", "Nie"))}', self.styles['Body']))
 
         # Prehlásenie
         story.append(Spacer(1, 0.3*cm))
