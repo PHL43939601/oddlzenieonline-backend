@@ -514,28 +514,35 @@ class PDFGenerator:
         story.append(Paragraph(esc(self.g('sudneSpory', 'nemám')), self.styles['Body']))
 
         # Obydlie
-        story.append(Paragraph('Obydlie – nepostihnuteľná hodnota', self.styles['SectionH']))
+        story.append(Paragraph('Obydlie – nepostihnuteľná hodnota obydlia dlžníka', self.styles['SectionH']))
         obydlie_typ = self.g('obydlieTyp')
         if obydlie_typ == 'nevlastnim':
             story.append(Paragraph(
                 '☒ Vyhlasujem, že nevlastním obývateľnú vec, ktorá by mohla byť v zozname majetku '
                 'označená za obydlie.', self.styles['Body']))
         elif obydlie_typ == 'uplatnujem':
-            typ_majetku = self.g('obydlieTypMajetku')
-            polozka = self.g('obydliePolozka')
+            obydlie_vyber = self.g('obydlieVyber')
+            parts = obydlie_vyber.split('|') if obydlie_vyber else ['', '', '']
+            typ_tabulky = parts[0] if len(parts) > 0 else ''
+            cislo_polozky = parts[1] if len(parts) > 1 else ''
+            popis_polozky = parts[2] if len(parts) > 2 else obydlie_vyber
             bsm_obydlie = self.g('obydlieBSM', 'Nie')
             story.append(Paragraph(
                 f'☒ Uplatňujem si nepostihnuteľnú hodnotu obydlia na obývateľnú vec (obydlie) '
-                f'uvedenú v tabuľke označenej ako <b>{esc(typ_majetku)}</b>, '
-                f'číslo položky <b>{esc(polozka)}</b>.', self.styles['Body']))
+                f'uvedenú v tabuľke označenej ako <b>{esc(typ_tabulky)}</b>, '
+                f'číslo položky <b>{esc(cislo_polozky)}</b>.', self.styles['Body']))
+            if popis_polozky:
+                story.append(Paragraph(f'Špecifikácia: {esc(popis_polozky)}', self.styles['Small']))
             story.append(Spacer(1, 0.15*cm))
             if bsm_obydlie == 'Áno':
                 story.append(Paragraph(
-                    'Označené obydlie <b>je</b> v bezpodielovom spoluvlastníctve manželov.',
+                    'Označené obydlie <b>je</b> v bezpodielovom spoluvlastníctve manželov. '
+                    'Nepostihnuteľná hodnota obydlia: 20 000 € (10 000 € pre každého z manželov).',
                     self.styles['Body']))
             else:
                 story.append(Paragraph(
-                    'Označené obydlie <b>nie je</b> v bezpodielovom spoluvlastníctve manželov.',
+                    'Označené obydlie <b>nie je</b> v bezpodielovom spoluvlastníctve manželov. '
+                    'Nepostihnuteľná hodnota obydlia: 10 000 €.',
                     self.styles['Body']))
         else:
             story.append(Paragraph('☐ Neuvedené', self.styles['Body']))
