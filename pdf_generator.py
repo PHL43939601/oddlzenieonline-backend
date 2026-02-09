@@ -279,11 +279,51 @@ class PDFGenerator:
 
         # 8.1 Spoločná domácnosť
         story.append(Paragraph('8.1. Spoločnú domácnosť tvorím s týmito osobami:', self.styles['SubH']))
-        story.append(self._field_table([
-            ['Manžel/ka, druh/družka:', esc(self.g('manzel'))],
-            ['Deti:', esc(self.g('deti')).replace('\n', '<br/>')],
-            ['Iné osoby:', esc(self.g('ineOsoby', '–'))],
-        ]))
+        dom_osoby = self._collect_dynamic('dom')
+        if dom_osoby:
+            for i, osoba in enumerate(dom_osoby, 1):
+                story.append(self._item_header(f'Osoba č. {i}'))
+                # Build social status string
+                soc_parts = []
+                soc_dom_map = {
+                    'soc_zamestanany': 'zamestnaný/á',
+                    'soc_szco': 'SZČO',
+                    'soc_dochodok': 'poberateľ/-ka dôchodku',
+                    'soc_nezamestnany': 'dobrovoľne nezamestnaný/á',
+                    'soc_uchadzac': 'uchádzač/-ka o zamestnanie',
+                    'soc_davky': 'poberateľ/-ka sociálnych dávok',
+                    'soc_ine': 'iné',
+                }
+                for sk, sl in soc_dom_map.items():
+                    if osoba.get(sk):
+                        extra = ''
+                        if sk == 'soc_szco':
+                            ico_val = osoba.get('ico', '')
+                            if ico_val:
+                                extra = f' (IČO: {ico_val})'
+                        elif sk == 'soc_dochodok':
+                            druh = osoba.get('dochodokDruh', '')
+                            if druh:
+                                extra = f' ({druh})'
+                        elif sk == 'soc_davky':
+                            druh = osoba.get('davkyDruh', '')
+                            if druh:
+                                extra = f' ({druh})'
+                        elif sk == 'soc_ine':
+                            ine_val = osoba.get('ine', '')
+                            if ine_val:
+                                extra = f' ({ine_val})'
+                        soc_parts.append(f'{sl}{extra}')
+                soc_text = ', '.join(soc_parts) if soc_parts else '–'
+                story.append(self._field_table([
+                    ['Meno a priezvisko:', esc(osoba.get('meno', ''))],
+                    ['Dátum narodenia:', esc(osoba.get('datnar', ''))],
+                    ['Vzťah:', esc(osoba.get('vztah', ''))],
+                    ['Sociálne postavenie:', esc(soc_text)],
+                ]))
+                story.append(Spacer(1, 0.15*cm))
+        else:
+            story.append(Paragraph('(žiadne osoby v domácnosti)', self.styles['Body']))
 
         # 8.2 Blízke osoby
         story.append(Paragraph('8.2. Blízke osoby mimo domácnosti:', self.styles['SubH']))
