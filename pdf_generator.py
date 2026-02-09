@@ -281,7 +281,7 @@ class PDFGenerator:
         story.append(Paragraph('8.1. Spoločnú domácnosť tvorím s týmito osobami:', self.styles['SubH']))
         story.append(self._field_table([
             ['Manžel/ka, druh/družka:', esc(self.g('manzel'))],
-            ['Deti:', esc(self.g('deti'))],
+            ['Deti:', esc(self.g('deti')).replace('\n', '<br/>')],
             ['Iné osoby:', esc(self.g('ineOsoby', '–'))],
         ]))
 
