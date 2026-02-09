@@ -514,18 +514,40 @@ class PDFGenerator:
         story.append(Paragraph(esc(self.g('sudneSpory', 'nemám')), self.styles['Body']))
 
         # Obydlie
-        story.append(Paragraph('Obydlie', self.styles['SectionH']))
-        if self.g('uplatnujeObydlie'):
-            story.append(Paragraph(f'☒ Uplatňujem si nepostihnuteľnú hodnotu obydlia na: {esc(self.g("obydlieVec"))}', self.styles['Body']))
+        story.append(Paragraph('Obydlie – nepostihnuteľná hodnota', self.styles['SectionH']))
+        obydlie_typ = self.g('obydlieTyp')
+        if obydlie_typ == 'nevlastnim':
+            story.append(Paragraph(
+                '☒ Vyhlasujem, že nevlastním obývateľnú vec, ktorá by mohla byť v zozname majetku '
+                'označená za obydlie.', self.styles['Body']))
+        elif obydlie_typ == 'uplatnujem':
+            typ_majetku = self.g('obydlieTypMajetku')
+            polozka = self.g('obydliePolozka')
+            bsm_obydlie = self.g('obydlieBSM', 'Nie')
+            story.append(Paragraph(
+                f'☒ Uplatňujem si nepostihnuteľnú hodnotu obydlia na obývateľnú vec (obydlie) '
+                f'uvedenú v tabuľke označenej ako <b>{esc(typ_majetku)}</b>, '
+                f'číslo položky <b>{esc(polozka)}</b>.', self.styles['Body']))
+            story.append(Spacer(1, 0.15*cm))
+            if bsm_obydlie == 'Áno':
+                story.append(Paragraph(
+                    'Označené obydlie <b>je</b> v bezpodielovom spoluvlastníctve manželov.',
+                    self.styles['Body']))
+            else:
+                story.append(Paragraph(
+                    'Označené obydlie <b>nie je</b> v bezpodielovom spoluvlastníctve manželov.',
+                    self.styles['Body']))
         else:
-            story.append(Paragraph('☐ Neuplatňujem si nepostihnuteľnú hodnotu obydlia', self.styles['Body']))
+            story.append(Paragraph('☐ Neuvedené', self.styles['Body']))
 
-        # Prehlásenie
+        # Záverečné vyhlásenia
         story.append(Spacer(1, 0.3*cm))
         story.append(Paragraph(
-            'Vyhlasujem, že v súčasnosti vlastním majetok uvedený v prílohe. Vyhlasujem, že všetky údaje '
-            'uvedené v zozname majetku sú pravdivé, úplné a som si vedomý právnych následkov v prípade '
-            'úmyselného uvedenia nepravdivých alebo neúplných údajov.',
+            'Vyhlasujem, že v súčasnosti vlastním majetok uvedený v prílohe.',
+            self.styles['Legal']))
+        story.append(Paragraph(
+            'Vyhlasujem, že všetky údaje uvedené v zozname majetku sú pravdivé, úplné a som si vedomý '
+            'právnych následkov v prípade úmyselného uvedenia nepravdivých alebo neúplných údajov.',
             self.styles['Legal']))
 
         self._signature_block(story)
