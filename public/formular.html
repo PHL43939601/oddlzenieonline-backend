@@ -1,1 +1,867 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OddlženieOnline.sk - Žiadosť o osobný bankrot</title>
+    <meta name="description" content="Online formulár pre osobný bankrot na Slovensku.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+:root{--navy:#0f1b2d;--blue:#2563eb;--blue-light:#3b82f6;--blue-pale:#dbeafe;--blue-bg:#eff6ff;--green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;--orange-light:#fff7ed;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;--g800:#1e293b;--white:#fff;--radius:10px;--radius-lg:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--g50);color:var(--g800);line-height:1.6;min-height:100vh}
+.header{background:var(--navy);color:var(--white);padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700}.logo span{color:var(--blue-light)}
+.header-info{font-size:.8rem;color:var(--g400)}
+.progress-container{background:var(--white);border-bottom:1px solid var(--g200);padding:20px 24px;position:sticky;top:56px;z-index:99}
+.progress-inner{max-width:900px;margin:0 auto}
+.progress-steps{display:flex;gap:4px;margin-bottom:12px}
+.progress-step{flex:1;height:4px;border-radius:2px;background:var(--g200);transition:background .4s}
+.progress-step.active{background:var(--blue)}.progress-step.completed{background:var(--green)}
+.progress-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--g400)}
+.progress-labels span.active{color:var(--blue);font-weight:600}.progress-labels span.completed{color:var(--green)}
+.progress-counter{text-align:center;font-size:.85rem;color:var(--g600);margin-bottom:8px}
+.progress-counter strong{color:var(--blue)}
+.main{max-width:900px;margin:0 auto;padding:32px 24px 120px}
+.step{display:none;animation:fadeIn .3s ease}.step.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.step-header{margin-bottom:28px}
+.step-header h2{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:700;color:var(--navy);margin-bottom:6px}
+.step-header p{color:var(--g500);font-size:.95rem}
+.form-section{background:var(--white);border:1px solid var(--g200);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.form-section-title{font-weight:600;font-size:1rem;color:var(--navy);margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--blue-pale);display:flex;align-items:center;gap:8px}
+.form-section-title .icon{width:28px;height:28px;background:var(--blue-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}.form-row.full{grid-template-columns:1fr}.form-row.auto{grid-template-columns:2fr 1fr}
+label{display:block;font-size:.85rem;font-weight:500;color:var(--g700);margin-bottom:6px}
+label .required{color:var(--red);margin-left:2px}
+input[type="text"],input[type="email"],input[type="tel"],input[type="number"],input[type="date"],select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--g300);border-radius:8px;font-size:.95rem;font-family:inherit;color:var(--g800);background:var(--white);transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+input.error,select.error,textarea.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.1)}
+.error-msg{color:var(--red);font-size:.78rem;margin-top:4px;display:none}
+input.error+.error-msg,select.error+.error-msg,textarea.error+.error-msg{display:block}
+textarea{resize:vertical;min-height:80px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.checkbox-group{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--g50);border-radius:8px;cursor:pointer;margin-bottom:4px}
+.checkbox-group input[type="checkbox"]{width:18px;height:18px;margin-top:2px;accent-color:var(--blue);flex-shrink:0}
+.checkbox-group span{font-size:.9rem;color:var(--g700)}
+.dynamic-list{margin-top:12px}
+.dynamic-item{background:var(--g50);border:1px solid var(--g200);border-radius:var(--radius);padding:20px;margin-bottom:12px;position:relative}
+.dynamic-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.dynamic-item-header h4{font-size:.9rem;font-weight:600;color:var(--navy)}
+.btn-remove{background:var(--red-light);color:var(--red);border:none;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:600;cursor:pointer}
+.btn-remove:hover{background:#fecaca}
+.btn-add{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);color:var(--blue);border:1.5px dashed var(--blue-light);border-radius:8px;padding:10px 20px;font-size:.88rem;font-weight:600;cursor:pointer;margin-top:8px}
+.btn-add:hover{background:var(--blue-bg);border-style:solid}
+.info-box{background:var(--blue-bg);border:1px solid var(--blue-pale);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.info-box .info-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.info-box p{font-size:.88rem;color:var(--g700)}
+.warning-box{background:var(--orange-light);border:1px solid #fed7aa;border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;gap:12px}
+.nav-buttons{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--g200);padding:16px 24px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.nav-inner{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.btn{padding:12px 32px;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-family:inherit}
+.btn-back{background:var(--g100);color:var(--g700)}.btn-back:hover{background:var(--g200)}
+.btn-next{background:var(--blue);color:var(--white)}.btn-next:hover{background:#1d4ed8}
+.btn-submit{background:var(--green);color:var(--white);padding:14px 40px;font-size:1rem}.btn-submit:hover{background:#047857}
+.btn-save{background:none;color:var(--g500);font-size:.8rem;padding:8px 16px}
+.summary-section{background:var(--white);border:1px solid var(--g200);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px}
+.summary-section h3{font-size:.95rem;font-weight:600;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.summary-section h3 .edit-btn{font-size:.78rem;color:var(--blue);cursor:pointer;font-weight:500;padding:4px 12px;border-radius:6px;background:var(--blue-pale);border:none}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--g100);font-size:.88rem}
+.summary-row:last-child{border-bottom:none}
+.summary-label{color:var(--g500)}.summary-value{color:var(--g800);font-weight:500;text-align:right;max-width:60%}
+.success-screen{text-align:center;padding:60px 24px}
+.success-icon{width:80px;height:80px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:2.5rem}
+.success-screen h2{font-family:'Fraunces',serif;font-size:1.8rem;color:var(--navy);margin-bottom:12px}
+.success-screen p{color:var(--g600);max-width:500px;margin:0 auto 32px}
+.success-steps{text-align:left;max-width:500px;margin:0 auto}
+.success-step{display:flex;gap:16px;align-items:flex-start;margin-bottom:20px}
+.success-step-num{width:32px;height:32px;background:var(--blue-pale);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0}
+.success-step-text h4{font-size:.95rem;color:var(--navy)}.success-step-text p{font-size:.85rem;color:var(--g500);margin:0}
+.loading-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,27,45,.7);z-index:1000;justify-content:center;align-items:center}
+.loading-overlay.active{display:flex}
+.loading-box{background:var(--white);border-radius:var(--radius-lg);padding:40px;text-align:center}
+.spinner{width:48px;height:48px;border:4px solid var(--g200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.legal-text{font-size:.82rem;color:var(--g500);line-height:1.6}
+.hint{font-size:.78rem;color:var(--g400);margin-top:4px}
+.separator{height:1px;background:var(--g200);margin:20px 0}
+@media(max-width:640px){.form-row,.form-row.three,.form-row.auto{grid-template-columns:1fr}.form-section{padding:20px 16px}.progress-labels{display:none}.step-header h2{font-size:1.4rem}.btn{padding:12px 20px;font-size:.88rem}}
+    </style>
+</head>
+<body>
+<header class="header"><div class="header-inner"><div class="logo">Oddlženie<span>Online</span>.sk</div><div class="header-info">Bezpečný formulár</div></div></header>
+<div class="progress-container" id="progressContainer"><div class="progress-inner">
+<div class="progress-counter">Krok <strong id="stepNum">1</strong> zo <strong>7</strong></div>
+<div class="progress-steps" id="progressSteps"><div class="progress-step active"></div><div class="progress-step"></div><div class="progress-step"></div><div class="progress-step"></div><div class="progress-step"></div><div class="progress-step"></div><div class="progress-step"></div></div>
+<div class="progress-labels"><span class="active">Osobné</span><span>Vzdelanie</span><span>Situácia</span><span>Majetok</span><span>Hist. majetku</span><span>Veritelia</span><span>Súhrn</span></div>
+</div></div>
+<main class="main"><form id="bankruptcyForm" novalidate>
+
+<!-- KROK 1: OSOBNÉ ÚDAJE -->
+<div class="step active" data-step="1">
+<div class="step-header"><h2>Osobné údaje dlžníka</h2><p>Základné identifikačné údaje podľa § 167 ods. 2 zákona č. 7/2005 Z. z.</p></div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">👤</span> Identifikácia</div>
+<div class="form-row three">
+<div class="form-group"><label>Titul</label><select id="titul" name="titul"><option value="">— bez titulu —</option><option value="Bc.">Bc.</option><option value="Mgr.">Mgr.</option><option value="Ing.">Ing.</option><option value="JUDr.">JUDr.</option><option value="MUDr.">MUDr.</option><option value="PhDr.">PhDr.</option><option value="PhD.">PhD.</option></select></div>
+<div class="form-group"><label>Meno <span class="required">*</span></label><input type="text" id="meno" name="meno" required placeholder="Miroslav"><div class="error-msg">Vyplňte meno</div></div>
+<div class="form-group"><label>Priezvisko <span class="required">*</span></label><input type="text" id="priezvisko" name="priezvisko" required placeholder="Šupa"><div class="error-msg">Vyplňte priezvisko</div></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Predchádzajúce priezvisko</label><input type="text" id="priezviskoPredch" name="priezviskoPredch" placeholder="Ak bolo iné"></div>
+<div class="form-group"><label>Rodné číslo <span class="required">*</span></label><input type="text" id="rodneCislo" name="rodneCislo" required placeholder="771006/6815" maxlength="11"><div class="error-msg">Vyplňte rodné číslo</div></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Dátum narodenia <span class="required">*</span></label><input type="date" id="datumNarodenia" name="datumNarodenia" required><div class="error-msg">Vyplňte dátum narodenia</div></div>
+<div class="form-group"><label>Štátna príslušnosť</label><input type="text" id="statnaPreslusnost" name="statnaPreslusnost" value="Slovenská republika"></div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🏠</span> Trvalé bydlisko</div>
+<div class="form-row auto">
+<div class="form-group"><label>Ulica <span class="required">*</span></label><input type="text" id="ulica" name="ulica" required placeholder="Svätourbanská"><div class="error-msg">Vyplňte ulicu</div></div>
+<div class="form-group"><label>Číslo <span class="required">*</span></label><input type="text" id="cisloDomu" name="cisloDomu" required placeholder="26"><div class="error-msg">Vyplňte číslo</div></div>
+</div>
+<div class="form-row three">
+<div class="form-group"><label>Obec <span class="required">*</span></label><input type="text" id="obec" name="obec" required placeholder="Nitra"><div class="error-msg">Vyplňte obec</div></div>
+<div class="form-group"><label>PSČ <span class="required">*</span></label><input type="text" id="psc" name="psc" required placeholder="94901" maxlength="6"><div class="error-msg">Vyplňte PSČ</div></div>
+<div class="form-group"><label>Kraj</label><select id="kraj" name="kraj"><option value="">— vyberte —</option><option>Bratislavský</option><option>Trnavský</option><option>Trenčiansky</option><option>Nitriansky</option><option>Žilinský</option><option>Banskobystrický</option><option>Prešovský</option><option>Košický</option></select></div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">📞</span> Kontaktné údaje</div>
+<div class="form-row">
+<div class="form-group"><label>Telefón <span class="required">*</span></label><input type="tel" id="telefon" name="telefon" required placeholder="+421905321070"><div class="error-msg">Vyplňte telefón</div></div>
+<div class="form-group"><label>E-mail <span class="required">*</span></label><input type="email" id="email" name="email" required placeholder="meno@email.sk"><div class="error-msg">Vyplňte e-mail</div></div>
+</div>
+</div>
+</div>
+
+<!-- KROK 2: VZDELANIE + PRÁCA -->
+<div class="step" data-step="2">
+<div class="step-header"><h2>Vzdelanie a pracovné skúsenosti</h2><p>Informácie o vzdelaní, schopnostiach, zdravotnom stave a zamestnaniach.</p></div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🎓</span> Vzdelanie</div>
+<div class="form-row">
+<div class="form-group"><label>Najvyššie dosiahnuté vzdelanie <span class="required">*</span></label><select id="vzdelanie" name="vzdelanie" required><option value="">— vyberte —</option><option>Základné</option><option>Stredoškolské bez maturity</option><option>Stredoškolské s maturitou</option><option>Vyššie odborné</option><option value="VŠ I. stupňa">VŠ I. stupňa (Bc.)</option><option value="VŠ II. stupňa">VŠ II. stupňa (Mgr./Ing.)</option><option value="VŠ III. stupňa">VŠ III. stupňa (PhD.)</option></select><div class="error-msg">Vyberte vzdelanie</div></div>
+<div class="form-group"><label>Ukončené v roku</label><input type="text" id="vzdelanieRok" name="vzdelanieRok" placeholder="2001" maxlength="4"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Odbor</label><input type="text" id="vzdelanieOdbor" name="vzdelanieOdbor" placeholder="napr. Právo"></div>
+<div class="form-group"><label>Škola</label><input type="text" id="vzdelanieSkaola" name="vzdelanieSkaola" placeholder="napr. UMB BB"></div>
+</div>
+<div class="form-row full"><div class="form-group"><label>Ďalšie vzdelanie, rekvalifikácia</label><textarea id="dalsieVzdelanie" name="dalsieVzdelanie" rows="2" placeholder="Kurzy, rekvalifikácie..."></textarea></div></div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🔧</span> Schopnosti a zručnosti</div>
+<div class="form-row full"><div class="form-group"><label>Jazykové znalosti</label><input type="text" id="jazyky" name="jazyky" placeholder="napr. AJ A1, NJ B1"></div></div>
+<div class="form-row">
+<div class="form-group"><label>Vodičský preukaz</label><select id="vodicak" name="vodicak"><option value="Nie">Nie</option><option value="Áno">Áno</option></select></div>
+<div class="form-group"><label>Typ</label><input type="text" id="vodicakTyp" name="vodicakTyp" placeholder="B"></div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🏥</span> Zdravotný stav</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Uveďte len závažné zdravotné problémy (invalidný dôchodok, ŤZP).</p></div>
+<div class="form-row full"><div class="form-group"><textarea id="zdravotnyStav" name="zdravotnyStav" rows="2" placeholder="Opíšte zdravotný stav..."></textarea></div></div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">💼</span> Pracovné skúsenosti</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Uveďte priebeh zamestnaní vrátane dohôd, brigád, SZČO, podnikania aj nezamestnanosti.</p></div>
+<div id="pracovneList" class="dynamic-list">
+<div class="dynamic-item" data-index="0">
+<div class="dynamic-item-header"><h4>Zamestnanie č. 1</h4></div>
+<div class="form-row three">
+<div class="form-group"><label>Od</label><input type="text" name="praca_od_0" placeholder="01/2001"></div>
+<div class="form-group"><label>Do</label><input type="text" name="praca_do_0" placeholder="12/2001 alebo doteraz"></div>
+<div class="form-group"><label>Pozícia</label><input type="text" name="praca_pozicia_0" placeholder="SZČO, exekútor..."></div>
+</div>
+<div class="form-row full"><div class="form-group"><label>Zamestnávateľ</label><input type="text" name="praca_zamestnavatel_0" placeholder="Názov firmy alebo SZČO"></div></div>
+</div>
+</div>
+<button type="button" class="btn-add" onclick="addDynamic('pracovneList','praca','Zamestnanie')">+ Pridať zamestnanie</button>
+</div>
+</div>
+
+<!-- KROK 3: ŽIVOTNÁ SITUÁCIA -->
+<div class="step" data-step="3">
+<div class="step-header"><h2>Aktuálna životná situácia</h2><p>Sociálne postavenie, príjmy, výdavky, vznik dlhov a spriaznené osoby.</p></div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">📋</span> Sociálne postavenie</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>V súčasnosti som: (označte — môžete označiť aj viac možností)</p></div>
+<label class="checkbox-group"><input type="checkbox" name="soc_zamestanany" value="1"><span>zamestnaný/á</span></label>
+<label class="checkbox-group"><input type="checkbox" name="soc_szco" value="1" onchange="document.getElementById('soc_szco_ico').style.display=this.checked?'block':'none'"><span>samostatne zárobkovo činná osoba</span></label>
+<div id="soc_szco_ico" style="display:none;margin:0 0 8px 40px"><div class="form-group"><label>uveďte IČO:</label><input type="text" id="ico" name="ico" placeholder="37857207"></div></div>
+<label class="checkbox-group"><input type="checkbox" name="soc_dochodok" value="1" onchange="document.getElementById('soc_dochodok_druh').style.display=this.checked?'block':'none'"><span>poberateľ/-ka dôchodku</span></label>
+<div id="soc_dochodok_druh" style="display:none;margin:0 0 8px 40px"><div class="form-group"><label>uveďte druh:</label><input type="text" id="dochodokDruh" name="dochodokDruh" placeholder="starobný, invalidný, vdovský..."></div></div>
+<label class="checkbox-group"><input type="checkbox" name="soc_nezamestnany" value="1"><span>dobrovoľne nezamestnaný/á</span></label>
+<label class="checkbox-group"><input type="checkbox" name="soc_uchadzac" value="1"><span>uchádzač/-ka o zamestnanie</span></label>
+<label class="checkbox-group"><input type="checkbox" name="soc_davky" value="1" onchange="document.getElementById('soc_davky_druh').style.display=this.checked?'block':'none'"><span>poberateľ/-ka sociálnych dávok</span></label>
+<div id="soc_davky_druh" style="display:none;margin:0 0 8px 40px"><div class="form-group"><label>uveďte druh:</label><input type="text" id="davkyDruh" name="davkyDruh" placeholder="dávka v hmotnej núdzi, prídavok na dieťa..."></div></div>
+<label class="checkbox-group"><input type="checkbox" name="soc_ine" value="1" onchange="document.getElementById('soc_ine_text').style.display=this.checked?'block':'none'"><span>iné</span></label>
+<div id="soc_ine_text" style="display:none;margin:0 0 8px 40px"><div class="form-group"><label>uveďte:</label><input type="text" id="inePostavenie" name="inePostavenie" placeholder="..."></div></div>
+<div class="form-row" style="margin-top:16px">
+<div class="form-group"><label>Rodinný stav</label><select id="rodinnyStav" name="rodinnyStav"><option value="">— vyberte —</option><option>Slobodný/á</option><option>Ženatý/Vydatá</option><option>Rozvedený/á</option><option>Vdovec/Vdova</option></select></div>
+</div>
+<div class="form-row full"><div class="form-group"><label>BSM</label><select id="bsm" name="bsm"><option value="Nie">Nie</option><option value="Áno">Áno</option><option value="Zúžené">Zúžené BSM</option><option value="Zrušené">Zrušené BSM</option></select></div></div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">💰</span> Moje príjmy</div>
+<div id="prijmyList" class="dynamic-list">
+<div class="dynamic-item" data-index="0">
+<div class="form-row"><div class="form-group"><label>Suma (€/mesiac)</label><input type="number" min="0" step="1" name="prijem_suma_0" placeholder="3000"></div><div class="form-group"><label>Zdroj</label><input type="text" name="prijem_zdroj_0" placeholder="mzda, dôchodok..."></div></div>
+</div></div>
+<button type="button" class="btn-add" onclick="addDynamic('prijmyList','prijem','Príjem')">+ Pridať príjem</button>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🧾</span> Moje výdavky (€/mesiac)</div>
+<div class="form-row"><div class="form-group"><label>Bývanie (nájom, energie)</label><input type="number" min="0" step="1" id="vydaj_byvanie" name="vydaj_byvanie" placeholder="100"></div><div class="form-group"><label>Strava</label><input type="number" min="0" step="1" id="vydaj_strava" name="vydaj_strava" placeholder="100"></div></div>
+<div class="form-row"><div class="form-group"><label>Hygiena a ošatenie</label><input type="number" min="0" step="1" id="vydaj_hygiena" name="vydaj_hygiena" placeholder="10"></div><div class="form-group"><label>Zdravotná starostlivosť</label><input type="number" min="0" step="1" id="vydaj_zdravie" name="vydaj_zdravie" placeholder="10"></div></div>
+<div class="form-row"><div class="form-group"><label>Starostlivosť o deti</label><input type="number" min="0" step="1" id="vydaj_deti" name="vydaj_deti" placeholder="100"></div><div class="form-group"><label>Poistné</label><input type="number" min="0" step="1" id="vydaj_poistne" name="vydaj_poistne" placeholder="10"></div></div>
+<div class="form-row"><div class="form-group"><label>Cestovné</label><input type="number" min="0" step="1" id="vydaj_cestovne" name="vydaj_cestovne" placeholder="10"></div><div class="form-group"><label>Splácanie dlhov</label><input type="number" min="0" step="1" id="vydaj_dlhy" name="vydaj_dlhy" placeholder="500"></div></div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">📝</span> Ako vznikli moje dlhy</div>
+<div class="form-row full"><div class="form-group"><label>Opíšte vznik dlhov <span class="required">*</span></label><textarea id="vznikDlhov" name="vznikDlhov" rows="4" required placeholder="Dlhy vznikli v dôsledku neúspešného podnikania..."></textarea><div class="error-msg">Opíšte vznik dlhov</div></div></div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">👨‍👩‍👧‍👦</span> Spoločná domácnosť</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Uveďte všetky osoby, s ktorými žijete v spoločnej domácnosti (manžel/ka, deti, iné). Ku každej osobe uveďte sociálne postavenie.</p></div>
+<div id="domacnostList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addOsobaDomacnost()">+ Pridať osobu v domácnosti</button>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">👥</span> Blízke osoby mimo domácnosti</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Príbuzní v priamom rade, súrodenci, manžel a iné blízke osoby.</p></div>
+<div id="blizkeOsobyList" class="dynamic-list">
+<div class="dynamic-item" data-index="0">
+<div class="form-row three">
+<div class="form-group"><label>Meno a priezvisko</label><input type="text" name="blizka_meno_0" placeholder="Katarína Šupová"></div>
+<div class="form-group"><label>Vzťah</label><input type="text" name="blizka_vztah_0" placeholder="sestra"></div>
+<div class="form-group"><label>Adresa</label><input type="text" name="blizka_adresa_0" placeholder="Kmeťkova 30, Nitra"></div>
+</div></div>
+</div>
+<button type="button" class="btn-add" onclick="addDynamic('blizkeOsobyList','blizka','Blízka osoba')">+ Pridať osobu</button>
+</div>
+
+<div class="form-section">
+<div class="form-section-title"><span class="icon">🏢</span> Kvalifikované účasti v právnických osobách</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Právnické osoby, v ktorých máte vy alebo blízke osoby podiel aspoň 5 %.</p></div>
+<div class="form-row full"><div class="form-group"><label>a) Moje účasti</label><textarea id="mojeUcasti" name="mojeUcasti" rows="2" placeholder="Nová nitrianska spoločnosť, s.r.o., IČO: 36542997, Nitra"></textarea></div></div>
+<div class="form-row full"><div class="form-group"><label>b) Účasti blízkych osôb</label><textarea id="blizkeUcasti" name="blizkeUcasti" rows="2" placeholder="Petra Šupová – ABC Trading s.r.o., IČO: 12345678, Bratislava"></textarea></div></div>
+</div>
+</div>
+
+<!-- KROK 4: ZOZNAM MAJETKU -->
+<div class="step" data-step="4">
+<div class="step-header"><h2>Zoznam majetku dlžníka</h2><p>Uveďte všetok majetok, ktorý v súčasnosti vlastníte.</p></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🌍</span> Pozemky</div>
+<div id="pozemkyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addPozemok('pozemkyList')">+ Pridať pozemok</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏗️</span> Stavby</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>V prípade dokončených a skolaudovaných stavieb nezapísaných na LV uveďte kolaudačné rozhodnutie. Pri nedokončených uveďte parcelu a stavebné povolenie.</p></div>
+<div id="stavbyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addStavba('stavbyList')">+ Pridať stavbu</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏠</span> Byty a nebytové priestory</div>
+<div id="bytyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addByt('bytyList')">+ Pridať byt</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🚗</span> Hnuteľné veci</div>
+<div id="hnutelneList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addHnutelna('hnutelneList')">+ Pridať hnuteľnú vec</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏦</span> Pohľadávky z účtu v banke</div>
+<div id="uctyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addUcet()">+ Pridať bankový účet</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">💎</span> Iné majetkové hodnoty</div>
+<div class="form-row full"><div class="form-group"><textarea id="ineMajetkoveHodnoty" name="ineMajetkoveHodnoty" rows="2" placeholder="napr. zlato 1 unca, striebro 100 uncí"></textarea></div></div></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">⚖️</span> Zabezpečovacie práva a súdne spory</div>
+<div class="form-row full"><div class="form-group"><label>Zabezpečovacie práva k majetku</label><textarea id="zabezpPrava" name="zabezpPrava" rows="2" placeholder="(žiadne)"></textarea></div></div>
+<div class="form-row full"><div class="form-group"><label>Súdne spory súvisiace s majetkom</label><textarea id="sudneSpory" name="sudneSpory" rows="2" placeholder="nemám"></textarea></div></div></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏡</span> Obydlie – nepostihnuteľná hodnota obydlia dlžníka</div>
+<div class="info-box"><span class="info-icon">ℹ️</span><p>Podľa § 166d zákona č. 7/2005 Z.z. si dlžník môže uplatniť nepostihnuteľnú hodnotu obydlia (10 000 €) na jednu obývateľnú vec, ktorú označí ako svoje obydlie. Ak je obydlie v BSM, každý z manželov má nárok na 10 000 € (spolu 20 000 €). Podmienkou je vlastníctvo obývateľnej veci — ak nebývate vo vlastnom, nepostihnuteľnú hodnotu obydlia si uplatniť nemôžete.</p></div>
+<div style="margin-bottom:12px">
+<label class="checkbox-group"><input type="radio" name="obydlieTyp" value="nevlastnim" checked onchange="document.getElementById('obydlieDetailUplatnujem').style.display='none'" style="width:18px;height:18px;accent-color:var(--blue)"><span>Vyhlasujem, že <strong>nevlastním</strong> obývateľnú vec, ktorá by mohla byť v zozname majetku označená za obydlie.</span></label>
+<label class="checkbox-group"><input type="radio" name="obydlieTyp" value="uplatnujem" onchange="document.getElementById('obydlieDetailUplatnujem').style.display='block';buildObydlieSelect()" style="width:18px;height:18px;accent-color:var(--blue)"><span><strong>Uplatňujem si</strong> nepostihnuteľnú hodnotu obydlia na obývateľnú vec (obydlie) uvedenú v zozname majetku.</span></label>
+</div>
+<div id="obydlieDetailUplatnujem" style="display:none">
+<div class="form-row full"><div class="form-group"><label>Obývateľná vec zo zoznamu majetku <span class="required">*</span></label><select id="obydlieVyber" name="obydlieVyber" style="font-size:.88rem"><option value="">— najprv vyplňte majetok v krokoch vyššie —</option></select><div class="hint">Zoznam sa automaticky naplní z majetku, ktorý ste uviedli (stavby, byty, hnuteľné veci)</div></div></div>
+<div class="form-row full"><div class="form-group"><label>Označené obydlie je v bezpodielovom spoluvlastníctve manželov?</label><select id="obydlieBSM" name="obydlieBSM"><option value="Nie">Nie — nepostihnuteľná hodnota obydlia je 10 000 €</option><option value="Áno">Áno — nepostihnuteľná hodnota obydlia je 20 000 € (10 000 € pre každého manžela)</option></select></div></div>
+</div></div>
+</div>
+
+<!-- KROK 5: HISTÓRIA MAJETKU -->
+<div class="step" data-step="5">
+<div class="step-header"><h2>Majetok väčšej hodnoty za posledné 3 roky</h2><p>Majetok, ktorý ste vlastnili v posledných troch rokoch a už nevlastníte.</p></div>
+<div class="warning-box"><span class="info-icon">⚠️</span><p>Uvádzajte len majetok <strong>väčšej hodnoty</strong> (nad 2 000 €) podľa § 48a vyhl. 665/2005 Z.z. Ak ste v posledných 3 rokoch nepreviedli žiaden takýto majetok, môžete tento krok preskočiť.</p></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🌍</span> Pozemky (hist.)</div>
+<div id="histPozemkyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addPozemok('histPozemkyList')">+ Pridať pozemok</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏗️</span> Stavby (hist.)</div>
+<div id="histStavbyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addStavba('histStavbyList')">+ Pridať stavbu</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🏠</span> Byty (hist.)</div>
+<div id="histBytyList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addByt('histBytyList')">+ Pridať byt</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">🚗</span> Hnuteľné veci (hist.)</div>
+<div id="histHnutelneList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addHnutelna('histHnutelneList')">+ Pridať hnuteľnú vec</button></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">💎</span> Iné (hist.)</div>
+<div class="form-row full"><div class="form-group"><textarea id="histIne" name="histIne" rows="2" placeholder="(žiadne)"></textarea></div></div></div>
+
+<div class="form-section"><div class="form-section-title"><span class="icon">⚖️</span> Zabezpečovacie práva a spory (hist.)</div>
+<div class="form-row full"><div class="form-group"><label>Zabezpečovacie práva</label><textarea id="histZabezp" name="histZabezp" rows="2" placeholder="(žiadne)"></textarea></div></div>
+<div class="form-row full"><div class="form-group"><label>Súdne spory</label><textarea id="histSpory" name="histSpory" rows="2" placeholder="(žiadne)"></textarea></div></div></div>
+</div>
+
+<!-- KROK 6: VERITELIA -->
+<div class="step" data-step="6">
+<div class="step-header"><h2>Zoznam veriteľov dlžníka</h2><p>Uveďte všetkých veriteľov, voči ktorým máte záväzky.</p></div>
+<div class="form-section"><div class="form-section-title"><span class="icon">🏛️</span> Veritelia</div>
+<div id="veriteliaList" class="dynamic-list"></div>
+<button type="button" class="btn-add" onclick="addVeritel()">+ Pridať veriteľa</button></div>
+</div>
+
+<!-- KROK 7: SÚHRN -->
+<div class="step" data-step="7">
+<div class="step-header"><h2>Súhrn a odoslanie žiadosti</h2><p>Skontrolujte správnosť údajov a odošlite žiadosť.</p></div>
+<div id="summaryContent"></div>
+<div class="form-section">
+<div class="form-section-title"><span class="icon">✅</span> Čestné prehlásenie</div>
+<div class="legal-text" style="margin-bottom:16px">
+<p>Čestne vyhlasujem, že som platobne neschopný/á, do tohto stavu som sa nepriviedol/a úmyselne, pri preberaní záväzkov som sa nespoliehal/a na to, že svoje dlhy budem riešiť oddlžením a nemám v úmysle poškodiť alebo zvýhodniť žiadneho veriteľa.</p><br>
+<p>Čestne vyhlasujem, že na území Slovenskej republiky mám centrum hlavných záujmov.</p><br>
+<p>Čestne vyhlasujem, že všetky údaje uvedené v žiadosti sú pravdivé a úplné a som si vedomý/á právnych následkov v prípade úmyselného uvedenia nepravdivých alebo neúplných údajov.</p>
+</div>
+<label class="checkbox-group"><input type="checkbox" id="cestnePrehlasenie" name="cestnePrehlasenie" required><span><strong>Potvrdzujem čestné prehlásenie</strong> — Som si vedomý/á právnych následkov.</span></label>
+<div class="separator"></div>
+<label class="checkbox-group"><input type="checkbox" id="gdprSuhlas" name="gdprSuhlas" required><span>Súhlasím so spracovaním osobných údajov v súlade s GDPR.</span></label>
+</div>
+</div>
+
+</form></main>
+
+<!-- NAVIGATION -->
+<div class="nav-buttons" id="navButtons"><div class="nav-inner">
+<button type="button" class="btn btn-back" id="btnBack" onclick="prevStep()" style="visibility:hidden">← Späť</button>
+<button type="button" class="btn btn-save" onclick="saveProgress()">Uložiť rozpracované</button>
+<button type="button" class="btn btn-save" onclick="autoFill()" style="color:var(--blue)">⚡ Demo vyplnenie</button>
+<button type="button" class="btn btn-next" id="btnNext" onclick="nextStep()">Ďalej →</button>
+</div></div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-box"><div class="spinner"></div><p>Odosielam žiadosť...</p><p style="font-size:.82rem;color:var(--g500);margin-top:8px">Generujem dokumenty a odosielam email.</p></div></div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 7;
+let counters = {praca:1,prijem:1,blizka:1,domacnost:0,pozemky:0,stavby:0,byty:0,hnutelne:0,ucty:0,veritelia:0};
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://oddlzenieonline-backend-production.up.railway.app';
+
+// === NAVIGATION ===
+function updateUI() {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.querySelector('.step[data-step="'+currentStep+'"]').classList.add('active');
+    document.getElementById('stepNum').textContent = currentStep;
+    document.querySelectorAll('.progress-step').forEach((s,i) => {
+        s.classList.remove('active','completed');
+        if(i+1===currentStep) s.classList.add('active');
+        if(i+1<currentStep) s.classList.add('completed');
+    });
+    document.querySelectorAll('.progress-labels span').forEach((l,i) => {
+        l.classList.remove('active','completed');
+        if(i+1===currentStep) l.classList.add('active');
+        if(i+1<currentStep) l.classList.add('completed');
+    });
+    document.getElementById('btnBack').style.visibility = currentStep===1?'hidden':'visible';
+    const btn = document.getElementById('btnNext');
+    if(currentStep===totalSteps){btn.textContent='Odoslať žiadosť ✉️';btn.className='btn btn-submit';btn.onclick=submitForm;}
+    else{btn.textContent='Ďalej →';btn.className='btn btn-next';btn.onclick=nextStep;}
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+function nextStep(){if(!validateStep(currentStep))return;if(currentStep<totalSteps){currentStep++;if(currentStep===totalSteps)buildSummary();updateUI();saveProgress();}}
+function prevStep(){if(currentStep>1){currentStep--;updateUI();}}
+function goToStep(s){currentStep=s;updateUI();}
+
+// === VALIDATION ===
+function validateStep(step){
+    const el=document.querySelector('.step[data-step="'+step+'"]');
+    const req=el.querySelectorAll('[required]');let valid=true;
+    req.forEach(inp=>{inp.classList.remove('error');if(!inp.value.trim()){inp.classList.add('error');valid=false;}
+    if(inp.type==='email'&&inp.value&&!inp.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){inp.classList.add('error');valid=false;}});
+    if(step===7){const cp=document.getElementById('cestnePrehlasenie'),gd=document.getElementById('gdprSuhlas');
+    if(!cp.checked||!gd.checked){valid=false;if(!cp.checked)alert('Musíte potvrdiť čestné prehlásenie.');else alert('Musíte súhlasiť so spracovaním osobných údajov.');}}
+    if(!valid&&step!==7){const fe=el.querySelector('.error');if(fe)fe.scrollIntoView({behavior:'smooth',block:'center'});}
+    // Step 5: validate history values > 2000
+    if(step===5){
+        const histHodnoty=el.querySelectorAll('input[name*="_hodnota_"]');
+        histHodnoty.forEach(inp=>{
+            if(inp.value && parseFloat(inp.value)<2001){
+                inp.classList.add('error');
+                valid=false;
+                alert('V histórii majetku uvádzajte len majetok s hodnotou nad 2 000 € (§ 48a vyhl. 665/2005 Z.z.)');
+            }
+        });
+    }
+    return valid;
+}
+
+// === DYNAMIC - GENERIC ===
+function addDynamic(listId, prefix, label) {
+    const list = document.getElementById(listId);
+    const idx = counters[prefix]++;
+    let fields = '';
+    if(prefix==='praca'){
+        fields=`<div class="form-row three"><div class="form-group"><label>Od</label><input type="text" name="praca_od_${idx}" placeholder="01/2001"></div><div class="form-group"><label>Do</label><input type="text" name="praca_do_${idx}" placeholder="doteraz"></div><div class="form-group"><label>Pozícia</label><input type="text" name="praca_pozicia_${idx}"></div></div><div class="form-row full"><div class="form-group"><label>Zamestnávateľ</label><input type="text" name="praca_zamestnavatel_${idx}"></div></div>`;
+    } else if(prefix==='prijem'){
+        fields=`<div class="form-row"><div class="form-group"><label>Suma (€)</label><input type="number" min="0" step="1" name="prijem_suma_${idx}"></div><div class="form-group"><label>Zdroj</label><input type="text" name="prijem_zdroj_${idx}"></div></div>`;
+    } else if(prefix==='blizka'){
+        fields=`<div class="form-row three"><div class="form-group"><label>Meno a priezvisko</label><input type="text" name="blizka_meno_${idx}"></div><div class="form-group"><label>Vzťah</label><input type="text" name="blizka_vztah_${idx}"></div><div class="form-group"><label>Adresa</label><input type="text" name="blizka_adresa_${idx}"></div></div>`;
+    }
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>${label} č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>${fields}</div>`);
+}
+
+// === OBYDLIE SELECT ===
+function buildObydlieSelect(){
+    const sel=document.getElementById('obydlieVyber');
+    const prev=sel.value;
+    sel.innerHTML='<option value="">— vyberte obývateľnú vec —</option>';
+    // Stavby
+    document.querySelectorAll('#stavbyList .dynamic-item').forEach((item,i)=>{
+        const popis=item.querySelector('[name^="s_popis_"]');
+        const obec=item.querySelector('[name^="s_obec_"]');
+        const lv=item.querySelector('[name^="s_lv_"]');
+        const label=`Stavba č. ${i+1}: ${popis?popis.value:''}, ${obec?obec.value:''} (LV ${lv?lv.value:''})`;
+        sel.insertAdjacentHTML('beforeend',`<option value="Stavba|${i+1}|${label}">${label}</option>`);
+    });
+    // Byty
+    document.querySelectorAll('#bytyList .dynamic-item').forEach((item,i)=>{
+        const popisBytu=item.querySelector('[name^="b_popisBytu_"]');
+        const obec=item.querySelector('[name^="b_obec_"]');
+        const lv=item.querySelector('[name^="b_lv_"]');
+        const cislo=item.querySelector('[name^="b_cislo_"]');
+        const label=`Byt č. ${i+1}: ${popisBytu?popisBytu.value:''}, byt č. ${cislo?cislo.value:''}, ${obec?obec.value:''} (LV ${lv?lv.value:''})`;
+        sel.insertAdjacentHTML('beforeend',`<option value="Byt|${i+1}|${label}">${label}</option>`);
+    });
+    // Hnuteľné veci (karavan, maringotka...)
+    document.querySelectorAll('#hnutelneList .dynamic-item').forEach((item,i)=>{
+        const popis=item.querySelector('[name^="h_popis_"]');
+        const label=`Hnuteľná vec č. ${i+1}: ${popis?popis.value:''}`;
+        sel.insertAdjacentHTML('beforeend',`<option value="Hnuteľná vec|${i+1}|${label}">${label}</option>`);
+    });
+    if(prev){sel.value=prev;}
+}
+
+// === OSOBA V DOMÁCNOSTI ===
+function addOsobaDomacnost(){
+    const list=document.getElementById('domacnostList');const idx=counters.domacnost++;
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item" data-index="${idx}">
+    <div class="dynamic-item-header"><h4>Osoba č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row three">
+        <div class="form-group"><label>Meno a priezvisko</label><input type="text" name="dom_meno_${idx}" placeholder="Petra Šupová"></div>
+        <div class="form-group"><label>Dátum narodenia</label><input type="text" name="dom_datnar_${idx}" placeholder="26.06.1978"></div>
+        <div class="form-group"><label>Vzťah</label><select name="dom_vztah_${idx}"><option value="">— vyberte —</option><option>manžel/ka</option><option>druh/družka</option><option>syn</option><option>dcéra</option><option>rodič</option><option>iné</option></select></div>
+    </div>
+    <div style="margin-top:8px;padding:12px;background:var(--blue-bg);border-radius:8px">
+        <label style="font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:8px;display:block">Sociálne postavenie:</label>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_zamestanany_${idx}" value="1"><span>zamestnaný/á</span></label>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_szco_${idx}" value="1" onchange="this.closest('.dynamic-item').querySelector('.dom-ico-${idx}').style.display=this.checked?'block':'none'"><span>samostatne zárobkovo činná osoba</span></label>
+        <div class="dom-ico-${idx}" style="display:none;margin:0 0 4px 40px"><label style="font-size:.8rem">IČO:</label><input type="text" name="dom_ico_${idx}" placeholder="12345678" style="max-width:200px"></div>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_dochodok_${idx}" value="1" onchange="this.closest('.dynamic-item').querySelector('.dom-doch-${idx}').style.display=this.checked?'block':'none'"><span>poberateľ/-ka dôchodku</span></label>
+        <div class="dom-doch-${idx}" style="display:none;margin:0 0 4px 40px"><label style="font-size:.8rem">druh:</label><input type="text" name="dom_dochodokDruh_${idx}" placeholder="starobný, invalidný..." style="max-width:250px"></div>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_nezamestnany_${idx}" value="1"><span>dobrovoľne nezamestnaný/á</span></label>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_uchadzac_${idx}" value="1"><span>uchádzač/-ka o zamestnanie</span></label>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_davky_${idx}" value="1" onchange="this.closest('.dynamic-item').querySelector('.dom-davky-${idx}').style.display=this.checked?'block':'none'"><span>poberateľ/-ka sociálnych dávok</span></label>
+        <div class="dom-davky-${idx}" style="display:none;margin:0 0 4px 40px"><label style="font-size:.8rem">druh:</label><input type="text" name="dom_davkyDruh_${idx}" placeholder="dávka v hmotnej núdzi..." style="max-width:250px"></div>
+        <label class="checkbox-group" style="margin-bottom:2px"><input type="checkbox" name="dom_soc_ine_${idx}" value="1" onchange="this.closest('.dynamic-item').querySelector('.dom-ine-${idx}').style.display=this.checked?'block':'none'"><span>iné</span></label>
+        <div class="dom-ine-${idx}" style="display:none;margin:0 0 4px 40px"><label style="font-size:.8rem">uveďte:</label><input type="text" name="dom_ine_${idx}" placeholder="študent, na materskej..." style="max-width:250px"></div>
+    </div>
+    </div>`);
+}
+
+// === POZEMKY ===
+function addPozemok(listId){
+    const list=document.getElementById(listId);const idx=counters.pozemky++;const p=listId.includes('hist')?'hp':'p';const minH=listId.includes('hist')?'min="2001"':'min="0"';
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Pozemok č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row"><div class="form-group"><label>LV č.</label><input type="text" name="${p}_lv_${idx}" placeholder="1477"></div><div class="form-group"><label>Obec</label><input type="text" name="${p}_obec_${idx}" placeholder="Nitra"></div></div>
+    <div class="form-row"><div class="form-group"><label>Katastrálne územie</label><input type="text" name="${p}_ku_${idx}" placeholder="Nitra"></div><div class="form-group"><label>Parcela č.</label><input type="text" name="${p}_parcela_${idx}" placeholder="174/8" style="display:inline-block;width:60%"><select name="${p}_register_${idx}" style="display:inline-block;width:38%;margin-left:2%"><option value="C">register C</option><option value="E">register E</option></select></div></div>
+    <div class="form-row three"><div class="form-group"><label>Výmera (m²)</label><input type="number" min="0" step="1" name="${p}_vymera_${idx}" placeholder="1000"></div><div class="form-group"><label>Druh pozemku</label><select name="${p}_druh_${idx}"><option value="">— vyberte —</option><option>orná pôda</option><option>chmeľnica</option><option>vinica</option><option>záhrada</option><option>ovocný sad</option><option>trvalý trávny porast</option><option>lesný pozemok</option><option>vodná plocha</option><option>zastavaná plocha a nádvorie</option><option>ostatná plocha</option><option>ostatná poľnohospodárska plocha</option></select></div><div class="form-group"><label>Hodnota (€)</label><input type="number" ${minH} step="1" name="${p}_hodnota_${idx}" placeholder="1000"></div></div>
+    <div class="form-row full"><div class="form-group"><label>Spoluvlastnícky podiel</label><input type="text" name="${p}_podiel_${idx}" placeholder="1/1"></div></div></div>`);
+}
+
+// === STAVBY ===
+function addStavba(listId){
+    const list=document.getElementById(listId||'stavbyList');const idx=counters.stavby++;const p=listId&&listId.includes('hist')?'hs':'s';const minH=listId&&listId.includes('hist')?'min="2001"':'min="0"';
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Stavba č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row"><div class="form-group"><label>LV č.</label><input type="text" name="${p}_lv_${idx}" placeholder="1744"></div><div class="form-group"><label>Obec</label><input type="text" name="${p}_obec_${idx}" placeholder="Nitra"></div></div>
+    <div class="form-row"><div class="form-group"><label>Katastrálne územie</label><input type="text" name="${p}_ku_${idx}" placeholder="Nitra"></div><div class="form-group"><label>Na pozemku parcelné č.</label><input type="text" name="${p}_parcela_${idx}" placeholder="174/8" style="display:inline-block;width:60%"><select name="${p}_register_${idx}" style="display:inline-block;width:38%;margin-left:2%"><option value="C">register C</option><option value="E">register E</option></select></div></div>
+    <div class="form-row three"><div class="form-group"><label>Súpisné č.</label><input type="text" name="${p}_supisne_${idx}" placeholder="44"></div><div class="form-group"><label>Orientačné č.</label><input type="text" name="${p}_orient_${idx}" placeholder="12"></div><div class="form-group"><label>Popis stavby</label><input type="text" name="${p}_popis_${idx}" placeholder="rodinný dom"></div></div>
+    <div class="form-row"><div class="form-group"><label>Hodnota (€)</label><input type="number" ${minH} step="1" name="${p}_hodnota_${idx}" placeholder="120000"></div><div class="form-group"><label>Spoluvl. podiel</label><input type="text" name="${p}_podiel_${idx}" placeholder="1/1"></div></div></div>`);
+}
+
+// === BYTY ===
+function addByt(listId){
+    const list=document.getElementById(listId||'bytyList');const idx=counters.byty++;const p=listId&&listId.includes('hist')?'hb':'b';const minH=listId&&listId.includes('hist')?'min="2001"':'min="0"';
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Byt č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row"><div class="form-group"><label>LV č.</label><input type="text" name="${p}_lv_${idx}" placeholder="5544"></div><div class="form-group"><label>Obec</label><input type="text" name="${p}_obec_${idx}" placeholder="Nitra"></div></div>
+    <div class="form-row"><div class="form-group"><label>Katastrálne územie</label><input type="text" name="${p}_ku_${idx}" placeholder="Chrenová"></div><div class="form-group"><label>Na pozemku parcelné č.</label><input type="text" name="${p}_parcela_${idx}" placeholder="1234/5" style="display:inline-block;width:60%"><select name="${p}_register_${idx}" style="display:inline-block;width:38%;margin-left:2%"><option value="C">register C</option><option value="E">register E</option></select></div></div>
+    <div class="form-row three"><div class="form-group"><label>Vchod</label><input type="text" name="${p}_vchod_${idx}" placeholder="A"></div><div class="form-group"><label>Poschodie</label><input type="text" name="${p}_poschodie_${idx}" placeholder="4"></div><div class="form-group"><label>Číslo bytu</label><input type="text" name="${p}_cislo_${idx}" placeholder="66"></div></div>
+    <div class="form-row"><div class="form-group"><label>Súpisné č.</label><input type="text" name="${p}_supisne_${idx}" placeholder="99"></div><div class="form-group"><label>Orientačné č.</label><input type="text" name="${p}_orient_${idx}" placeholder="15"></div></div>
+    <div class="form-row"><div class="form-group"><label>Druh pozemku</label><select name="${p}_druh_${idx}"><option value="">— vyberte —</option><option>orná pôda</option><option>chmeľnica</option><option>vinica</option><option>záhrada</option><option>ovocný sad</option><option>trvalý trávny porast</option><option>lesný pozemok</option><option>vodná plocha</option><option>zastavaná plocha a nádvorie</option><option>ostatná plocha</option><option>ostatná poľnohospodárska plocha</option></select></div><div class="form-group"><label>Popis stavby</label><input type="text" name="${p}_popisStavby_${idx}" placeholder="bytový dom"></div></div>
+    <div class="form-row full"><div class="form-group"><label>Podiel na spoločných častiach</label><input type="text" name="${p}_podielSpoloc_${idx}" placeholder="6174/408572"></div></div>
+    <div class="form-row full"><div class="form-group"><label>Popis bytu</label><input type="text" name="${p}_popisBytu_${idx}" placeholder="3-izbový byt, 68 m²"></div></div>
+    <div class="form-row"><div class="form-group"><label>Hodnota (€)</label><input type="number" ${minH} step="1" name="${p}_hodnota_${idx}" placeholder="100000"></div><div class="form-group"><label>Spoluvl. podiel</label><input type="text" name="${p}_podiel_${idx}" placeholder="1/1"></div></div></div>`);
+}
+
+// === HNUTEĽNÉ VECI ===
+function addHnutelna(listId){
+    const list=document.getElementById(listId||'hnutelneList');const idx=counters.hnutelne++;const p=listId&&listId.includes('hist')?'hh':'h';const minH=listId&&listId.includes('hist')?'min="2001"':'min="0"';
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Hnuteľná vec č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row full"><div class="form-group"><label>Popis</label><input type="text" name="${p}_popis_${idx}" placeholder="Audi A4 Avant, rok výroby 2015"></div></div>
+    <div class="form-row"><div class="form-group"><label>VIN / výrobné č.</label><input type="text" name="${p}_vin_${idx}" placeholder="WAUZZZ8K6FA123456"></div><div class="form-group"><label>ŠPZ / evidenčné č.</label><input type="text" name="${p}_spz_${idx}" placeholder="NR232FL"></div></div>
+    <div class="form-row"><div class="form-group"><label>Kde sa nachádza</label><input type="text" name="${p}_kde_${idx}" placeholder="Svätourbanská 26, 949 01 Nitra"></div><div class="form-group"><label>Hodnota (€)</label><input type="number" ${minH} step="1" name="${p}_hodnota_${idx}" placeholder="12000"></div></div></div>`);
+}
+
+// === ÚČTY ===
+function addUcet(){
+    const list=document.getElementById('uctyList');const idx=counters.ucty++;
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Účet č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row"><div class="form-group"><label>IBAN</label><input type="text" name="ucet_iban_${idx}" placeholder="SK44 1100 0000 0012 3456 7890"></div><div class="form-group"><label>Banka</label><input type="text" name="ucet_banka_${idx}" placeholder="Tatra banka, a.s."></div></div>
+    <div class="form-row full"><div class="form-group"><label>Zostatok (€)</label><input type="number" min="0" step="1" name="ucet_zostatok_${idx}" placeholder="555"></div></div></div>`);
+}
+
+// === VERITELIA ===
+function addVeritel(){
+    const list=document.getElementById('veriteliaList');const idx=counters.veritelia++;
+    list.insertAdjacentHTML('beforeend',`<div class="dynamic-item"><div class="dynamic-item-header"><h4>Veriteľ č. ${idx+1}</h4><button type="button" class="btn-remove" onclick="this.closest('.dynamic-item').remove()">Odstrániť</button></div>
+    <div class="form-row"><div class="form-group"><label>Názov / Meno</label><input type="text" name="ver_nazov_${idx}" placeholder="Tatra banka, a.s."></div><div class="form-group"><label>IČO / Dátum nar.</label><input type="text" name="ver_ico_${idx}" placeholder="00686930"></div></div>
+    <div class="form-row"><div class="form-group"><label>Ulica (sídlo)</label><input type="text" name="ver_ulica_${idx}" placeholder="Hodžovo námestie 3"></div><div class="form-group"><label>Súpisné číslo</label><input type="text" name="ver_supisne_${idx}" placeholder="3"></div></div>
+    <div class="form-row three"><div class="form-group"><label>Obec</label><input type="text" name="ver_obec_${idx}" placeholder="Bratislava"></div><div class="form-group"><label>PSČ</label><input type="text" name="ver_psc_${idx}" placeholder="81106"></div><div class="form-group"><label>Štát</label><input type="text" name="ver_stat_${idx}" value="SR"></div></div></div>`);
+}
+
+// === SAVE / LOAD ===
+function saveProgress(){
+    try{
+        const form=document.getElementById('bankruptcyForm');
+        const data=new FormData(form);const obj={};
+        data.forEach((v,k)=>{ if(obj[k]){if(!Array.isArray(obj[k]))obj[k]=[obj[k]];obj[k].push(v);} else obj[k]=v; });
+        obj._step=currentStep; obj._counters=counters;
+        obj._dynamicHTML={};
+        ['domacnostList','pozemkyList','stavbyList','bytyList','hnutelneList','uctyList','veriteliaList','histPozemkyList','histStavbyList','histBytyList','histHnutelneList'].forEach(id=>{
+            const el=document.getElementById(id);if(el)obj._dynamicHTML[id]=el.innerHTML;
+        });
+        localStorage.setItem('oddlzenie_form',JSON.stringify(obj));
+        const btn=document.querySelector('.btn-save');if(btn){btn.textContent='✓ Uložené';setTimeout(()=>btn.textContent='Uložiť rozpracované',2000);}
+    }catch(e){console.error('Save error:',e);}
+}
+
+function loadProgress(){
+    try{
+        const saved=localStorage.getItem('oddlzenie_form');
+        if(!saved)return;
+        const obj=JSON.parse(saved);
+        if(obj._counters)Object.assign(counters,obj._counters);
+        if(obj._dynamicHTML){Object.keys(obj._dynamicHTML).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=obj._dynamicHTML[id];});}
+        const form=document.getElementById('bankruptcyForm');
+        Object.keys(obj).forEach(k=>{
+            if(k.startsWith('_'))return;
+            const el=form.querySelector('[name="'+k+'"]');
+            if(!el)return;
+            if(el.type==='checkbox')el.checked=!!obj[k];
+            else el.value=obj[k];
+        });
+        if(obj._step){currentStep=obj._step;updateUI();}
+    }catch(e){console.error('Load error:',e);}
+}
+
+// === SUMMARY ===
+function buildSummary(){
+    const g=id=>{const el=document.getElementById(id);return el?el.value||'—':'—';};
+    const gc=name=>{const el=document.querySelector('[name="'+name+'"]');return el&&el.checked?'Áno':'Nie';};
+    let html='';
+    // Osobné údaje
+    html+=`<div class="summary-section"><h3>Osobné údaje <button class="edit-btn" onclick="goToStep(1)">Upraviť</button></h3>
+    <div class="summary-row"><span class="summary-label">Meno</span><span class="summary-value">${g('titul')?g('titul')+' ':''}${g('meno')} ${g('priezvisko')}</span></div>
+    <div class="summary-row"><span class="summary-label">Rodné číslo</span><span class="summary-value">${g('rodneCislo')}</span></div>
+    <div class="summary-row"><span class="summary-label">Dátum narodenia</span><span class="summary-value">${g('datumNarodenia')}</span></div>
+    <div class="summary-row"><span class="summary-label">Adresa</span><span class="summary-value">${g('ulica')} ${g('cisloDomu')}, ${g('psc')} ${g('obec')}</span></div>
+    <div class="summary-row"><span class="summary-label">Telefón</span><span class="summary-value">${g('telefon')}</span></div>
+    <div class="summary-row"><span class="summary-label">E-mail</span><span class="summary-value">${g('email')}</span></div></div>`;
+    // Vzdelanie
+    html+=`<div class="summary-section"><h3>Vzdelanie a práca <button class="edit-btn" onclick="goToStep(2)">Upraviť</button></h3>
+    <div class="summary-row"><span class="summary-label">Vzdelanie</span><span class="summary-value">${g('vzdelanie')}</span></div>
+    <div class="summary-row"><span class="summary-label">Odbor / Škola</span><span class="summary-value">${g('vzdelanieOdbor')} / ${g('vzdelanieSkaola')}</span></div></div>`;
+    // Situácia
+    html+=`<div class="summary-section"><h3>Životná situácia <button class="edit-btn" onclick="goToStep(3)">Upraviť</button></h3>
+    <div class="summary-row"><span class="summary-label">Osoby v domácnosti</span><span class="summary-value">${document.querySelectorAll('#domacnostList .dynamic-item').length}</span></div>
+    <div class="summary-row"><span class="summary-label">Vznik dlhov</span><span class="summary-value" style="max-width:70%;font-size:.82rem">${g('vznikDlhov').substring(0,150)}...</span></div></div>`;
+    // Majetok
+    const pocetMaj=document.querySelectorAll('#pozemkyList .dynamic-item,#stavbyList .dynamic-item,#bytyList .dynamic-item,#hnutelneList .dynamic-item,#uctyList .dynamic-item').length;
+    html+=`<div class="summary-section"><h3>Majetok <button class="edit-btn" onclick="goToStep(4)">Upraviť</button></h3>
+    <div class="summary-row"><span class="summary-label">Počet položiek majetku</span><span class="summary-value">${pocetMaj}</span></div>
+    <div class="summary-row"><span class="summary-label">Obydlie</span><span class="summary-value">${document.querySelector('[name="obydlieTyp"][value="uplatnujem"]')?.checked ? (document.getElementById('obydlieVyber').selectedOptions[0]?.text||'—') : 'Nevlastním obývateľnú vec'}</span></div></div>`;
+    // Veritelia
+    const pocetVer=document.querySelectorAll('#veriteliaList .dynamic-item').length;
+    html+=`<div class="summary-section"><h3>Veritelia <button class="edit-btn" onclick="goToStep(6)">Upraviť</button></h3>
+    <div class="summary-row"><span class="summary-label">Počet veriteľov</span><span class="summary-value">${pocetVer}</span></div></div>`;
+    document.getElementById('summaryContent').innerHTML=html;
+}
+
+// === SUBMIT ===
+async function submitForm(){
+    if(!validateStep(7))return;
+    const overlay=document.getElementById('loadingOverlay');overlay.classList.add('active');
+    try{
+        const form=document.getElementById('bankruptcyForm');
+        const data=new FormData(form);const obj={};
+        data.forEach((v,k)=>{ if(obj[k]){if(!Array.isArray(obj[k]))obj[k]=[obj[k]];obj[k].push(v);} else obj[k]=v; });
+        const resp=await fetch(API_URL+'/api/submit-form',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+        if(!resp.ok)throw new Error('Server error');
+        overlay.classList.remove('active');
+        localStorage.removeItem('oddlzenie_form');
+        showSuccess();
+    }catch(err){
+        overlay.classList.remove('active');
+        alert('Chyba pri odosielaní. Skúste znova alebo nás kontaktujte na info@oddlzenieonline.sk');
+        console.error(err);
+    }
+}
+
+function showSuccess(){
+    document.getElementById('progressContainer').style.display='none';
+    document.getElementById('navButtons').style.display='none';
+    document.querySelector('.main').innerHTML=`
+    <div class="success-screen">
+        <div class="success-icon">✅</div>
+        <h2>Žiadosť úspešne odoslaná!</h2>
+        <p>Ďakujeme za vyplnenie žiadosti. Vaše dokumenty boli vygenerované a odoslané na kontrolu.</p>
+        <div class="success-steps">
+            <div class="success-step"><div class="success-step-num">1</div><div class="success-step-text"><h4>Kontrola dokumentov</h4><p>Právnik skontroluje vaše údaje do 24–48 hodín.</p></div></div>
+            <div class="success-step"><div class="success-step-num">2</div><div class="success-step-text"><h4>Kontaktovanie</h4><p>Ozveme sa vám s informáciami o ďalšom postupe.</p></div></div>
+            <div class="success-step"><div class="success-step-num">3</div><div class="success-step-text"><h4>Úhrada a podanie</h4><p>Po kontrole a úhrade 349 € budú dokumenty pripravené na podanie.</p></div></div>
+        </div>
+    </div>`;
+}
+
+// === AUTOFILL ===
+function autoFill(){
+    // Osobné údaje
+    const vals = {
+        titul:'JUDr.', meno:'Miroslav', priezvisko:'Šupa', priezviskoPredch:'',
+        rodneCislo:'771006/6815', datumNarodenia:'1977-10-06', statnaPreslusnost:'Slovenská republika',
+        ulica:'Svätourbanská', cisloDomu:'26', obec:'Nitra', psc:'94901', kraj:'Nitriansky',
+        telefon:'+421905321070', email:'miroslav.supa@gmail.com',
+        // Vzdelanie
+        vzdelanie:'VŠ II. stupňa', vzdelanieRok:'2001', vzdelanieOdbor:'Právo', vzdelanieSkaola:'UMB BB',
+        dalsieVzdelanie:'rok Harvard', jazyky:'AJ A1, NJ B1', vodicak:'Áno', vodicakTyp:'B',
+        zdravotnyStav:'sve super',
+        // Práca
+        praca_od_0:'01/2001', praca_do_0:'12/2001', praca_pozicia_0:'SZČO', praca_zamestnavatel_0:'ExU NR',
+        // Sociálne
+        ico:'37857207', rodinnyStav:'Ženatý/Vydatá', bsm:'Nie',
+        // Príjmy
+        prijem_suma_0:'3000', prijem_zdroj_0:'mzda',
+        // Výdavky
+        vydaj_byvanie:'100', vydaj_strava:'100', vydaj_hygiena:'10', vydaj_zdravie:'10',
+        vydaj_deti:'100', vydaj_poistne:'10', vydaj_cestovne:'10', vydaj_dlhy:'500',
+        // Dlhy
+        vznikDlhov:'Dlhy vznikli v dôsledku neúspešného podnikania v roku 2018, kedy som musel zatvoriť prevádzku a zostali mi nesplatené záväzky voči dodávateľom a banke.',
+        // Rodina - domácnosť
+        deti:'',
+        ineOsoby:'',
+        // Blízke osoby
+        blizka_meno_0:'Katarína Šupová', blizka_vztah_0:'sestra', blizka_adresa_0:'Kmeťkova 30, Nitra',
+        // Účasti
+        mojeUcasti:'Nová nitrianska spoločnosť, s.r.o., IČO: 36542997, Nitra',
+        blizkeUcasti:'Petra Šupová (manželka) – ABC Trading s.r.o., IČO: 12345678, Bratislava',
+        // Majetok - iné
+        ineMajetkoveHodnoty:'zlato 1 unca a striebro 100 uncí',
+        zabezpPrava:'(žiadne)', sudneSpory:'nemám',
+        obydlieBSM:'Nie',
+        // História
+        histIne:'(žiadne)', histZabezp:'(žiadne)', histSpory:'(žiadne)',
+    };
+    // Vyplň jednoduché polia
+    Object.keys(vals).forEach(k=>{
+        const el=document.querySelector('[name="'+k+'"]');
+        if(el){el.value=vals[k];el.dispatchEvent(new Event('change'));}
+    });
+    // Checkboxy
+    const cb=document.querySelector('[name="soc_szco"]');if(cb){cb.checked=true;document.getElementById('soc_szco_ico').style.display='block';}
+    const obRadio=document.querySelector('[name="obydlieTyp"][value="uplatnujem"]');if(obRadio){obRadio.checked=true;document.getElementById('obydlieDetailUplatnujem').style.display='block';}
+    // Build obydlie select after all property is added (delay to wait for DOM)
+    setTimeout(()=>{buildObydlieSelect();const sel=document.getElementById('obydlieVyber');if(sel&&sel.options.length>1)sel.selectedIndex=2;},300);
+
+    // Domácnosť - manželka
+    addOsobaDomacnost();
+    setTimeout(()=>{
+        const f={dom_meno_0:'Petra Šupová',dom_datnar_0:'26.06.1978',dom_vztah_0:'manžel/ka'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+        const cb=document.querySelector('[name="dom_soc_zamestanany_0"]');if(cb)cb.checked=true;
+    },100);
+    // Domácnosť - dcéra
+    addOsobaDomacnost();
+    setTimeout(()=>{
+        const f={dom_meno_1:'Alexandra Šupová',dom_datnar_1:'05.02.2013',dom_vztah_1:'dcéra'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+        const cbi=document.querySelector('[name="dom_soc_ine_1"]');if(cbi){cbi.checked=true;cbi.dispatchEvent(new Event('change'));}
+        setTimeout(()=>{const el=document.querySelector('[name="dom_ine_1"]');if(el)el.value='študentka';},50);
+    },150);
+    // Domácnosť - syn
+    addOsobaDomacnost();
+    setTimeout(()=>{
+        const f={dom_meno_2:'Miroslav Šupa ml.',dom_datnar_2:'27.01.2010',dom_vztah_2:'syn'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+        const cbi=document.querySelector('[name="dom_soc_ine_2"]');if(cbi){cbi.checked=true;cbi.dispatchEvent(new Event('change'));}
+        setTimeout(()=>{const el=document.querySelector('[name="dom_ine_2"]');if(el)el.value='študent';},50);
+    },200);
+
+    // Pridaj prácu č.2
+    addDynamic('pracovneList','praca','Zamestnanie');
+    setTimeout(()=>{
+        const f={praca_od_1:'12/2001',praca_do_1:'doteraz',praca_pozicia_1:'exekútor',praca_zamestnavatel_1:'SZČO'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Pridaj blízku osobu č.2
+    addDynamic('blizkeOsobyList','blizka','Blízka osoba');
+    setTimeout(()=>{
+        const f={blizka_meno_1:'Edita Šupová',blizka_vztah_1:'matka',blizka_adresa_1:'Svätourbanská 26, Nitra'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Majetok - pozemok
+    addPozemok('pozemkyList');
+    setTimeout(()=>{
+        const f={p_lv_0:'1477',p_obec_0:'Nitra',p_ku_0:'Nitra',p_parcela_0:'174/8',p_register_0:'C',p_vymera_0:'1000',p_druh_0:'orná pôda',p_hodnota_0:'1000',p_podiel_0:'1/1'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Stavba
+    addStavba('stavbyList');
+    setTimeout(()=>{
+        const f={s_lv_0:'1744',s_obec_0:'Nitra',s_ku_0:'Nitra',s_supisne_0:'44',s_orient_0:'12',s_parcela_0:'174/8',s_register_0:'C',s_popis_0:'rodinný dom',s_hodnota_0:'120000',s_podiel_0:'1/1'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Byt
+    addByt('bytyList');
+    setTimeout(()=>{
+        const f={b_lv_0:'5544',b_obec_0:'Nitra',b_ku_0:'Chrenová',b_parcela_0:'1234/5',b_register_0:'C',b_vchod_0:'A',b_poschodie_0:'4',b_cislo_0:'66',b_supisne_0:'99',b_orient_0:'15',b_druh_0:'zastavaná plocha a nádvorie',b_popisStavby_0:'bytový dom',b_podielSpoloc_0:'6174/408572',b_popisBytu_0:'3-izbový byt o výmere 68 m², WC, chodba, kuchyňa, kúpeľňa',b_hodnota_0:'100000',b_podiel_0:'1/1'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Hnuteľná vec
+    addHnutelna('hnutelneList');
+    setTimeout(()=>{
+        const f={h_popis_0:'Audi A4 Avant, rok výroby 2015',h_vin_0:'WAUZZZ8K6FA123456',h_spz_0:'NR232FL',h_kde_0:'Svätourbanská 26, 949 01 Nitra',h_hodnota_0:'12000'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Účet
+    addUcet();
+    setTimeout(()=>{
+        const f={ucet_iban_0:'SK44 1100 0000 0012 3456 7890',ucet_banka_0:'Tatra banka, a.s.',ucet_zostatok_0:'555'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // História - pozemok
+    addPozemok('histPozemkyList');
+    setTimeout(()=>{
+        const f={hp_lv_0:'1666',hp_obec_0:'Babindol',hp_ku_0:'Babindol',hp_parcela_0:'789/9',hp_register_0:'E',hp_vymera_0:'2500',hp_druh_0:'trvalý trávny porast',hp_hodnota_0:'25000',hp_podiel_0:'1/2'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // História - stavba
+    addStavba('histStavbyList');
+    setTimeout(()=>{
+        const f={hs_lv_0:'5555',hs_obec_0:'Nitra',hs_ku_0:'Nitra',hs_supisne_0:'123',hs_orient_0:'45',hs_parcela_0:'456/7',hs_register_0:'C',hs_popis_0:'administratívna budova',hs_hodnota_0:'500000',hs_podiel_0:'1/1'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // História - byt
+    addByt('histBytyList');
+    setTimeout(()=>{
+        const f={hb_lv_0:'2222',hb_obec_0:'Nitra',hb_ku_0:'Chrenová',hb_parcela_0:'987/1',hb_register_0:'C',hb_vchod_0:'B',hb_poschodie_0:'8',hb_cislo_0:'32',hb_supisne_0:'77',hb_orient_0:'7',hb_druh_0:'zastavaná plocha a nádvorie',hb_popisStavby_0:'panelový bytový dom',hb_podielSpoloc_0:'5500/350000',hb_popisBytu_0:'2-izbový byt o výmere 55 m², WC, chodba, kuchyňa, kúpeľňa, balkón, pivnica, komora',hb_hodnota_0:'85000',hb_podiel_0:'1/1'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+
+    // Veritelia
+    addVeritel();
+    setTimeout(()=>{
+        const f={ver_nazov_0:'Tatra banka, a.s.',ver_ico_0:'00686930',ver_ulica_0:'Hodžovo námestie 3',ver_supisne_0:'3',ver_obec_0:'Bratislava',ver_psc_0:'81106',ver_stat_0:'SR'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },100);
+    addVeritel();
+    setTimeout(()=>{
+        const f={ver_nazov_1:'VÚB, a.s.',ver_ico_1:'31320155',ver_ulica_1:'Mlynské nivy 1',ver_supisne_1:'1',ver_obec_1:'Bratislava',ver_psc_1:'82990',ver_stat_1:'SR'};
+        Object.keys(f).forEach(k=>{const el=document.querySelector('[name="'+k+'"]');if(el)el.value=f[k];});
+    },200);
+
+    alert('✅ Formulár vyplnený! Prejdite všetky kroky a na konci odošlite.');
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded',()=>{
+    loadProgress();
+    // Enforce numeric-only on all number inputs - strip non-digits on every input
+    document.addEventListener('input',function(e){
+        if(e.target.type==='number'){
+            // Remove anything that's not a digit
+            const clean=e.target.value.replace(/[^\d]/g,'');
+            if(e.target.value!==clean)e.target.value=clean;
+        }
+    });
+    // Block paste of non-numeric content
+    document.addEventListener('paste',function(e){
+        if(e.target.type==='number'){
+            e.preventDefault();
+            const text=(e.clipboardData||window.clipboardData).getData('text');
+            const clean=text.replace(/[^\d]/g,'');
+            e.target.value=clean;
+        }
+    });
+    // Block non-digit keys
+    document.addEventListener('keydown',function(e){
+        if(e.target.type==='number'){
+            // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+            if([8,9,13,27,35,36,37,38,39,40,46].indexOf(e.keyCode)!==-1)return;
+            // Allow Ctrl+A/C/V/X
+            if((e.ctrlKey||e.metaKey)&&[65,67,86,88].indexOf(e.keyCode)!==-1)return;
+            // Block everything except digits
+            if((e.key<'0'||e.key>'9')&&e.key!=='.'&&e.key!==','){
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+</body></html>
 
