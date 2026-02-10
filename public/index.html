@@ -1,1 +1,501 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OddlženieOnline.sk – Osobný bankrot online | Návrh na oddlženie</title>
+<meta name="description" content="Pripravte si kompletný návrh na osobný bankrot z pohodlia domova. Od 99 €. Rýchlo, jednoducho, diskrétne.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+    --navy:#0d1b3e;--navy-light:#162755;--navy-mid:#1e3a6e;
+    --gold:#c5a255;--gold-light:#d4b76a;--gold-dark:#a8893e;
+    --blue:#2563eb;--blue-light:#3b82f6;
+    --white:#ffffff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;
+    --gray-400:#94a3b8;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;
+    --green:#16a34a;--green-light:#22c55e;
+    --red:#dc2626;
+}
+body{font-family:'Source Sans 3',sans-serif;color:var(--gray-800);background:var(--white);line-height:1.7;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;line-height:1.3}
+
+/* === NAV === */
+nav{background:var(--navy);padding:0 24px;position:fixed;top:0;left:0;right:0;z-index:100;border-bottom:1px solid rgba(197,162,85,.15)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{color:var(--gold);font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;text-decoration:none;letter-spacing:.5px}
+.nav-logo span{color:var(--white);font-weight:400}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{background:var(--gold);color:var(--navy)!important;padding:8px 20px;border-radius:6px;font-weight:600!important;transition:background .2s}
+.nav-cta:hover{background:var(--gold-light)!important}
+
+/* === HERO === */
+.hero{background:linear-gradient(170deg,var(--navy) 0%,var(--navy-light) 45%,var(--navy-mid) 100%);padding:140px 24px 100px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(197,162,85,.06) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to top,var(--white),transparent)}
+.hero-inner{max-width:900px;margin:0 auto;text-align:center;position:relative;z-index:2}
+.hero-badge{display:inline-block;background:rgba(197,162,85,.15);color:var(--gold);font-size:.82rem;font-weight:600;padding:6px 18px;border-radius:20px;margin-bottom:28px;border:1px solid rgba(197,162,85,.25);letter-spacing:.5px;text-transform:uppercase}
+.hero h1{color:var(--white);font-size:clamp(2rem,5vw,3.2rem);font-weight:700;margin-bottom:20px;letter-spacing:-.5px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero-sub{color:rgba(255,255,255,.7);font-size:1.15rem;max-width:650px;margin:0 auto 36px;font-weight:300;line-height:1.8}
+.hero-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-hero{padding:14px 32px;border-radius:8px;font-size:1rem;font-weight:600;text-decoration:none;transition:all .25s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--gold);color:var(--navy)}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 25px rgba(197,162,85,.3)}
+.btn-secondary{background:transparent;color:var(--white);border:1.5px solid rgba(255,255,255,.3)}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+.hero-trust{display:flex;gap:40px;justify-content:center;margin-top:48px;flex-wrap:wrap}
+.hero-trust-item{color:rgba(255,255,255,.5);font-size:.85rem;display:flex;align-items:center;gap:8px}
+.hero-trust-item svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2}
+
+/* === SECTIONS === */
+section{padding:80px 24px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{color:var(--gold-dark);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+.section-title{font-size:clamp(1.6rem,3.5vw,2.4rem);color:var(--navy);margin-bottom:16px}
+.section-subtitle{color:var(--gray-500);font-size:1.05rem;max-width:700px;line-height:1.8}
+
+/* === INFO === */
+.info-section{background:var(--gray-50)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px}
+.info-card{background:var(--white);border-radius:12px;padding:32px;border:1px solid var(--gray-200);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.info-card h3{color:var(--navy);font-size:1.2rem;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.info-card h3 .icon{font-size:1.4rem}
+.info-card p{color:var(--gray-600);font-size:.95rem;line-height:1.8}
+.info-card ul{color:var(--gray-600);font-size:.95rem;line-height:1.8;margin-top:8px;padding-left:20px}
+.info-card ul li{margin-bottom:4px}
+.info-full{grid-column:1/-1;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);border:none;color:var(--white)}
+.info-full h3{color:var(--gold)}
+.info-full p,.info-full ul{color:rgba(255,255,255,.8)}
+
+/* === STEPS === */
+.steps{margin-top:48px}
+.step{display:flex;gap:24px;margin-bottom:32px;align-items:flex-start}
+.step-num{width:48px;height:48px;min-width:48px;background:var(--navy);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700}
+.step-content h4{color:var(--navy);font-size:1.1rem;margin-bottom:4px;font-family:'Source Sans 3',sans-serif;font-weight:600}
+.step-content p{color:var(--gray-600);font-size:.95rem}
+
+/* === PRICING === */
+.pricing-section{background:var(--gray-50)}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:48px;max-width:900px;margin-left:auto;margin-right:auto}
+.price-card{background:var(--white);border-radius:16px;padding:40px 32px;border:2px solid var(--gray-200);position:relative;transition:transform .3s,box-shadow .3s}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.08)}
+.price-card.featured{border-color:var(--gold);box-shadow:0 8px 30px rgba(197,162,85,.15)}
+.price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:.78rem;font-weight:700;padding:5px 18px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.price-card h3{font-size:1.3rem;color:var(--navy);margin-bottom:8px}
+.price-card .desc{color:var(--gray-500);font-size:.9rem;margin-bottom:20px;line-height:1.6}
+.price-amount{font-family:'Playfair Display',serif;display:flex;align-items:baseline;gap:4px;margin-bottom:4px}
+.price-amount .price{font-size:2.8rem;color:var(--navy);font-weight:700}
+.price-amount .price-old{font-size:1.3rem;color:var(--gray-400);text-decoration:line-through;margin-right:8px}
+.price-amount .eur{font-size:1.2rem;color:var(--gray-500);font-weight:400}
+.price-note{color:var(--gray-400);font-size:.82rem;margin-bottom:24px}
+.price-features{list-style:none;padding:0;margin-bottom:28px}
+.price-features li{padding:8px 0;color:var(--gray-700);font-size:.92rem;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--gray-100)}
+.price-features li:last-child{border:none}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;font-size:1rem;min-width:18px}
+.price-btn{display:block;width:100%;padding:14px;border-radius:8px;font-size:1rem;font-weight:600;text-align:center;text-decoration:none;transition:all .25s;cursor:pointer;border:none}
+.price-btn-primary{background:var(--gold);color:var(--navy)}
+.price-btn-primary:hover{background:var(--gold-light)}
+.price-btn-outline{background:transparent;color:var(--navy);border:2px solid var(--navy)}
+.price-btn-outline:hover{background:var(--navy);color:var(--white)}
+.price-counter{text-align:center;margin-top:24px;padding:16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:10px}
+.price-counter p{font-size:.88rem;color:var(--gray-700);font-weight:500}
+.price-counter strong{color:var(--red);font-weight:700}
+
+/* === FAQ === */
+.faq-list{margin-top:40px;max-width:800px}
+.faq-item{border-bottom:1px solid var(--gray-200);padding:20px 0}
+.faq-q{font-weight:600;color:var(--navy);font-size:1.05rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-q::after{content:'+';font-size:1.4rem;color:var(--gold);font-weight:400;transition:transform .3s;min-width:20px;text-align:center}
+.faq-q.open::after{content:'−'}
+.faq-a{color:var(--gray-600);font-size:.95rem;line-height:1.8;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;padding-top:0}
+.faq-a.open{max-height:500px;padding-top:12px}
+
+/* === CTA === */
+.cta-section{background:linear-gradient(170deg,var(--navy),var(--navy-light));text-align:center;padding:80px 24px}
+.cta-section h2{color:var(--white);font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:16px}
+.cta-section p{color:rgba(255,255,255,.7);font-size:1.05rem;margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto}
+
+/* === FOOTER === */
+footer{background:var(--navy);padding:40px 24px;border-top:1px solid rgba(197,162,85,.1)}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.footer-left{color:rgba(255,255,255,.5);font-size:.85rem}
+.footer-left a{color:var(--gold);text-decoration:none}
+.footer-links{display:flex;gap:24px}
+.footer-links a{color:rgba(255,255,255,.5);text-decoration:none;font-size:.85rem;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+
+/* === RESPONSIVE === */
+@media(max-width:768px){
+    .nav-links a:not(.nav-cta){display:none}
+    .info-grid{grid-template-columns:1fr}
+    .pricing-grid{grid-template-columns:1fr;max-width:450px}
+    .hero{padding:120px 20px 80px}
+    .hero-trust{gap:20px}
+    .footer-inner{flex-direction:column;text-align:center}
+    .step{gap:16px}
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.animate{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.animate.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+<div class="nav-inner">
+    <a href="/" class="nav-logo">Oddlženie<span>Online</span>.sk</a>
+    <div class="nav-links">
+        <a href="#ako-to-funguje">Ako to funguje</a>
+        <a href="#priprava">Príprava</a>
+        <a href="#cennik">Cenník</a>
+        <a href="#faq">Otázky</a>
+        <a href="/formular" class="nav-cta">Začať →</a>
+    </div>
+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+<div class="hero-inner">
+    <div class="hero-badge">✦ Kompletný návrh na oddlženie od 99 €</div>
+    <h1>Zbavte sa dlhov.<br>Začnite <em>nový život</em>.</h1>
+    <p class="hero-sub">Pripravte si kompletný návrh na osobný bankrot z pohodlia domova. Bez čakania v poradovníkoch, bez zbytočnej byrokracie. Jednoducho, rýchlo a diskrétne.</p>
+    <div class="hero-buttons">
+        <a href="/formular" class="btn-hero btn-primary">Pripraviť návrh online →</a>
+        <a href="#ako-to-funguje" class="btn-hero btn-secondary">Ako to funguje?</a>
+    </div>
+    <div class="hero-trust">
+        <div class="hero-trust-item">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            100% diskrétne
+        </div>
+        <div class="hero-trust-item">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            V súlade so zákonom
+        </div>
+        <div class="hero-trust-item">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Preverené advokátom
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- INFO -->
+<section class="info-section" id="o-bankrote">
+<div class="section-inner">
+    <div class="section-label">Osobný bankrot</div>
+    <h2 class="section-title">Čo je oddlženie a kto oň môže požiadať?</h2>
+    <p class="section-subtitle">Oddlženie (osobný bankrot) je zákonný spôsob, ako sa fyzická osoba môže zbaviť svojich dlhov a začať odznova. Upravuje ho zákon č. 7/2005 Z.z. o konkurze a reštrukturalizácii.</p>
+
+    <div class="info-grid">
+        <div class="info-card animate">
+            <h3><span class="icon">📋</span> Podmienky oddlženia</h3>
+            <ul>
+                <li>Ste fyzická osoba (nepodnikateľ aj SZČO)</li>
+                <li>Ste platobne neschopný — neviete plniť aspoň jeden záväzok 180 dní po splatnosti</li>
+                <li>Voči vám sa vedie exekúcia (pri konkurze min. 1 rok od vydania poverenia, pri splátkovom kalendári aj menej)</li>
+                <li>Ste poctivý dlžník — do platobnej neschopnosti ste sa nedostali úmyselne</li>
+                <li>Máte centrum hlavných záujmov na území SR</li>
+            </ul>
+        </div>
+        <div class="info-card animate">
+            <h3><span class="icon">⚖️</span> Formy oddlženia</h3>
+            <p><strong>Konkurz</strong> — speňaženie majetku dlžníka (vrátane BSM, ktoré vyhlásením konkurzu zaniká). Odporúča sa dlžníkom s väčšími dlhmi ako majetkom, alebo bez majetku, s nízkym/žiadnym príjmom. Preddavok na odmenu správcu: 500 € (pôžička od CPP).</p>
+            <p style="margin-top:12px"><strong>Splátkový kalendár</strong> — dlžník spláca min. 30 % dlhov počas 5 rokov. Vhodné pre tých, ktorí majú majetok a pravidelný príjem. Preddavok 500 € + odmena advokáta 160 € hradíte sami. Vyžaduje riadny prehľad o dlhoch.</p>
+        </div>
+        <div class="info-full info-card animate">
+            <h3><span class="icon">🏛️</span> Centrum právnej pomoci (CPP)</h3>
+            <p>Návrh na oddlženie sa podáva výlučne prostredníctvom Centra právnej pomoci alebo ním určeného advokáta. Na CPP zaplatíte jednorazový poplatok <strong>50 €</strong> (kolková známka). CPP zabezpečí podanie návrhu na súd, ustanovenie správcu a celý právny proces. <strong>My vám pomôžeme pripraviť všetky podklady, ktoré na CPP budete potrebovať.</strong></p>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- AKO TO FUNGUJE -->
+<section id="ako-to-funguje">
+<div class="section-inner">
+    <div class="section-label">Postup</div>
+    <h2 class="section-title">Ako to funguje?</h2>
+    <p class="section-subtitle">Celý proces zvládnete z domu. Stačia 4 jednoduché kroky.</p>
+
+    <div class="steps">
+        <div class="step animate">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Vyplňte online formulár</h4>
+                <p>Vyplníte údaje o sebe, svojom majetku, príjmoch, výdavkoch a veriteľoch. Formulár vás prevedie krok za krokom. Rozpracovaný formulár sa automaticky ukladá.</p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Vygenerujeme vám dokumenty</h4>
+                <p>Na základe vašich údajov automaticky pripravíme 4 dokumenty potrebné pre Centrum právnej pomoci: životopis dlžníka, zoznam majetku, história majetku a zoznam veriteľov.</p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Vytlačíte, podpíšete a zavoláte na CPP</h4>
+                <p>Dokumenty si vytlačíte a podpíšete. Pripravíte si kolkovú známku v hodnote 50 € (kúpite na pošte). <strong>Zavolajte na najbližšie Centrum právnej pomoci a požiadajte o termín na podanie návrhu na vyhlásenie osobného bankrotu</strong> — uveďte, že všetky dokumenty máte pripravené.</p>
+                <p style="margin-top:8px;color:var(--gray-500);font-size:.9rem">📬 <strong>Nemáte tlačiareň?</strong> Za 5 € vám dokumenty vytlačíme a zašleme poštou na adresu vášho trvalého pobytu.</p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <h4>Navštívite CPP — ostatné vybavia za vás</h4>
+                <p>Na CPP spíšete Žiadosť o poskytnutie právnej pomoci v konaní o oddlžení a uhradíte 50 € kolok. CPP rozhodne o nároku do 30 dní. V prípade konkurzu CPP automaticky podá návrh na súd. V prípade splátkového kalendára vás spojí s určeným advokátom. Súd do 15 dní vydá uznesenie a určí správcu.</p>
+                <p style="margin-top:8px;color:var(--gray-500);font-size:.9rem"><strong>Upozornenie:</strong> Čakacia doba na prvú konzultáciu na CPP sa zvyčajne pohybuje medzi <strong>2 a 3 mesiace</strong>. Preto je výhodnejšie pripraviť si všetky dokumenty vopred — sami pomocou nášho formulára alebo prostredníctvom spolupracujúceho advokáta. Na CPP tak prídete už s kompletnými podkladmi a proces sa výrazne urýchli.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- ČO SI PRIPRAVIŤ -->
+<section class="info-section" id="priprava">
+<div class="section-inner">
+    <div class="section-label">Príprava</div>
+    <h2 class="section-title">Čo si pripraviť ešte pred vyplnením formulára</h2>
+    <p class="section-subtitle">Bez týchto podkladov formulár nedokážete kompletne vyplniť. Pripravte si ich vopred — zaberie to pár dní, ale ušetrí vám to čas a zbytočné opravy.</p>
+
+    <div class="steps" style="margin-top:40px">
+        <div class="step animate">
+            <div class="step-num">①</div>
+            <div class="step-content">
+                <h4>Výpis z Centrálneho registra exekúcií (CRE)</h4>
+                <p>Zaregistrujte sa na <a href="https://www.cre.sk" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">www.cre.sk</a> a vyžiadajte si výpis. Vo výpise nájdete <strong>zoznam všetkých exekúcií</strong> vedených voči vám — mená veriteľov, spisové značky a dátumy poverení. Tieto údaje budete potrebovať do zoznamu veriteľov. <strong>Výpis nesmie byť starší ako 30 dní</strong> v čase podania návrhu na CPP. Ak si neviete rady s vyhľadávaním v CRE, zvoľte náš balík <strong>S advokátom</strong> — vylustruje za vás všetky dlhy z registra.</p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">②</div>
+            <div class="step-content">
+                <h4>Výpis z účtu poistenca (Sociálna poisťovňa)</h4>
+                <p>Navštívte pobočku Sociálnej poisťovne v mieste bydliska a vyžiadajte si <strong>„Informáciu o odpracovaných rokoch"</strong> alebo <strong>„Výpis z účtu poistenca"</strong>. Je bezplatný. Nájdete v ňom prehľad všetkých predchádzajúcich zamestnaní — tieto údaje potrebujete do životopisu dlžníka.</p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">③</div>
+            <div class="step-content">
+                <h4>Prehľad o svojich dlhoch a veriteľoch</h4>
+                <p>Pripravte si zoznam <strong>všetkých</strong> svojich veriteľov — bánk, nebankových spoločností, exekútorov, poisťovní, súkromných osôb. Využite výpis z CRE, ale doplňte aj veriteľov, ktorí ešte nepodali návrh na vykonanie exekúcie. <strong>Neuvedenie veriteľa je dôvod na zrušenie oddlženia pre nepoctivý zámer.</strong></p>
+            </div>
+        </div>
+        <div class="step animate">
+            <div class="step-num">④</div>
+            <div class="step-content">
+                <h4>Listy vlastníctva k nehnuteľnostiam</h4>
+                <p>Ak vlastníte nehnuteľný majetok (pozemky, stavby, byty), vyhľadajte si svoje listy vlastníctva na portáli <a href="https://zbgis.skgeodesy.sk/mapka/sk/kataster?pos=48.800000,19.530000,8" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">ZBGIS – Mapka katastra</a>. Údaje z listov vlastníctva (číslo LV, katastrálne územie, parcely, výmery, spoluvlastnícke podiely) budete potrebovať pri vyplňovaní zoznamu majetku. Ak si neviete rady s vyhľadávaním na katastri, zvoľte balík <strong>S advokátom</strong> — vyhľadá a spracuje vaše listy vlastníctva za vás.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card info-full animate" style="margin-top:32px">
+        <h3><span class="icon">⚠️</span> Podmienka vedenia exekúcie</h3>
+        <p>Oddlženie je možné iba ak sa voči vám <strong>vedie exekučné konanie</strong> alebo obdobné vykonávacie konanie (napríklad dobrovoľná dražba). Pri oddlžení <strong>konkurzom</strong> musí od vydania poverenia na vykonanie exekúcie uplynúť <strong>aspoň 1 rok</strong>. Pri <strong>splátkovom kalendári</strong> postačuje aj kratšie obdobie. Či je voči vám vedená exekúcia a kedy bolo poverenie vydané, zistíte z výpisu z CRE.</p>
+    </div>
+</div>
+</section>
+
+<!-- CENNÍK -->
+<section class="pricing-section" id="cennik">
+<div class="section-inner">
+    <div class="section-label">Cenník</div>
+    <h2 class="section-title">Vyberte si balík, ktorý vám vyhovuje</h2>
+    <p class="section-subtitle">Oba balíky zahŕňajú kompletné vygenerovanie všetkých dokumentov potrebných pre CPP.</p>
+
+    <div class="pricing-grid">
+        <!-- Základný -->
+        <div class="price-card featured">
+            <h3>Základný balík</h3>
+            <p class="desc">Pre jednoduchšie prípady — dlžník bez väčšieho majetku, ktorý ide do konkurzu.</p>
+            <div class="price-amount">
+                <span class="price">99</span>
+                <span class="eur">€</span>
+            </div>
+            <p class="price-note">Jednorazová platba za prípravu dokumentov</p>
+            <ul class="price-features">
+                <li>Životopis dlžníka s aktuálnou životnou situáciou</li>
+                <li>Zoznam majetku dlžníka</li>
+                <li>História majetku za posledné 3 roky</li>
+                <li>Zoznam veriteľov dlžníka</li>
+                <li>Online vyplnenie formulára z domu</li>
+                <li>Automatická kontrola údajov</li>
+                <li>PDF dokumenty na stiahnutie a vytlačenie</li>
+                <li>Voliteľne: tlač a zaslanie poštou (+5 €)</li>
+            </ul>
+            <a href="/formular" class="price-btn price-btn-primary">Začať vyplňovať →</a>
+        </div>
+
+        <!-- Premium -->
+        <div class="price-card">
+            <h3>S advokátom</h3>
+            <p class="desc">Pre zložitejšie prípady — dlžník vlastní majetok, ktorý bude predmetom speňažovania v konkurze.</p>
+            <div class="price-amount">
+                <span class="price">399</span>
+                <span class="eur">€</span>
+            </div>
+            <p class="price-note">Vrátane kontroly advokátom</p>
+            <ul class="price-features">
+                <li>Všetko zo Základného balíka</li>
+                <li>Lustrácia všetkých dlhov v registri exekúcií (CRE)</li>
+                <li>Vyhľadanie a spracovanie listov vlastníctva z katastra</li>
+                <li>Kontrola a revízia spolupracujúcim advokátom</li>
+                <li>Posúdenie majetkových pomerov</li>
+                <li>Konzultácia k nepostihnuteľnej hodnote obydlia</li>
+                <li>Odporúčanie najvhodnejšej formy oddlženia</li>
+                <li>Pomoc pri komunikácii s CPP</li>
+            </ul>
+            <a href="/formular?balik=premium" class="price-btn price-btn-outline">Začať s advokátom →</a>
+        </div>
+    </div>
+
+    <p style="text-align:center;margin-top:32px;color:var(--gray-500);font-size:.9rem">
+        <strong>Dôležité:</strong> Okrem ceny za prípravu dokumentov uhradíte na CPP jednorazový poplatok 50 € (kolková známka) a preddavok na odmenu správcu 500 € (pri konkurze formou pôžičky od CPP, pri splátkovom kalendári hradíte sami).
+    </p>
+</div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+<div class="section-inner">
+    <div class="section-label">Časté otázky</div>
+    <h2 class="section-title">Máte otázky? Máme odpovede.</h2>
+
+    <div class="faq-list">
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Prídem pri osobnom bankrote o všetok majetok?</div>
+            <div class="faq-a">Nie nevyhnutne. Zákon pozná inštitút nepostihnuteľnej hodnoty obydlia (10 000 €). Ak hodnota vášho obydlia nepresahuje túto sumu, nespeňažuje sa. Ak vlastníte obydlie s manželom/manželkou v BSM, nepostihnuteľná hodnota je 20 000 €. Bežné veci osobnej potreby a domácnosti tiež nepodliehajú konkurzu.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Koľko celkovo stojí osobný bankrot?</div>
+            <div class="faq-a">Celkové náklady závisí od formy oddlženia. <strong>Konkurz:</strong> naša služba (od 99 €) + kolková známka na CPP (50 €) + preddavok na odmenu správcu (500 € — pôžička od CPP, ktorú vrátite do 2 rokov). Celkovo teda od 619 €. <strong>Splátkový kalendár:</strong> naša služba (od 99 €) + kolková známka (50 €) + odmena správcu 500 € (hradíte sami) + odmena určeného advokáta 160 € (+ prípadná DPH). CPP inak poskytuje právnu pomoc bezplatne.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Ako dlho trvá celý proces oddlženia?</div>
+            <div class="faq-a">Vyplnenie formulára u nás zaberie 30–60 minút. Návšteva CPP a spísanie žiadosti trvá 1–2 hodiny. CPP rozhodne o nároku do 30 dní od doručenia kompletnej žiadosti. Súd následne do 15 dní od podania návrhu vydá uznesenie o vyhlásení konkurzu a oddlžení. Celý proces od vyplnenia formulára po oddlženie tak trvá spravidla 2–4 mesiace.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Aký je rozdiel medzi konkurzom a splátkovým kalendárom?</div>
+            <div class="faq-a"><strong>Konkurz</strong> — speňaží sa váš majetok (vrátane BSM, ktoré vyhlásením konkurzu zaniká) a z výťažku sa uhradia pohľadávky veriteľov. Zvyšné dlhy sa stanú nevymáhateľnými. Odporúča sa dlžníkom s väčšími dlhmi ako majetkom alebo bez majetku, s nízkym/žiadnym príjmom. <strong>Splátkový kalendár</strong> — ponecháte si majetok, ale musíte splatiť min. 30 % dlhov počas 5 rokov (a o 10 % viac, než by veritelia dostali v konkurze). Vhodné pre dlžníkov s majetkom a pravidelným príjmom. Pozor: ak nebudete schopný plniť splátky, stratíte na 10 rokov možnosť oddlženia.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Aká je podmienka vedenia exekúcie?</div>
+            <div class="faq-a">Pre <strong>konkurz</strong> musí byť voči vám vedené exekučné konanie alebo obdobné vykonávacie konanie (napríklad dobrovoľná dražba) a od vydania poverenia na vykonanie exekúcie musí uplynúť aspoň <strong>1 rok</strong>. Pre <strong>splátkový kalendár</strong> postačuje vedenie exekúcie aj menej ako 1 rok.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Môže si podať osobný bankrot aj podnikateľ (SZČO)?</div>
+            <div class="faq-a">Áno. Oddlženie je určené pre fyzické osoby — nepodnikateľov aj podnikateľov (SZČO). Oddlženie nie je prekážkou prevádzkovania živnosti. Dôležité je, aby šlo o fyzickú osobu, nie právnickú osobu (s.r.o., a.s.).</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Čo sa stane po priznaní nároku na CPP?</div>
+            <div class="faq-a"><strong>Konkurz:</strong> Po prevzatí rozhodnutia CPP koná automaticky ako váš právny zástupca — podá návrh na súd. Súd do 15 dní vydá uznesenie a určí správcu. <strong>Splátkový kalendár:</strong> Po prevzatí rozhodnutia musíte do 30 dní kontaktovať určeného advokáta, uzavrieť dohodu a udeliť plnomocenstvo. Advokát podá návrh na súd. Správca má 45 dní na preskúmanie a zostavenie splátkového kalendára.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Sú moje údaje v bezpečí?</div>
+            <div class="faq-a">Áno. Všetky údaje sú spracúvané v súlade s GDPR a slúžia výlučne na prípravu dokumentov pre vaše oddlženie. Údaje nie sú zdieľané s tretími stranami okrem spolupracujúceho advokáta (pri balíku S advokátom). Upozorňujeme však, že informácie o konkurznom konaní sú verejne dostupné v Registri úpadcov na <a href="https://replik.justice.sk/ru-verejnost-web/" target="_blank" rel="noopener" style="color:var(--blue)">replik.justice.sk</a>.</div>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- DÔLEŽITÉ INFO -->
+<section class="info-section" id="dolezite-info">
+<div class="section-inner">
+    <div class="section-label">Dôležité informácie</div>
+    <h2 class="section-title">Čo by ste mali vedieť pred podaním návrhu</h2>
+
+    <div class="info-grid">
+        <div class="info-card animate">
+            <h3><span class="icon">📌</span> Následky oddlženia</h3>
+            <p>Oddlženie znamená, že pohľadávky, na ktoré sa vzťahuje, budú voči vám <strong>nevymáhateľné</strong> (napr. v exekúcii) — avšak nezaniknú ani ich za vás nikto nezaplatí.</p>
+            <p style="margin-top:10px">Oddlženie sa vzťahuje <strong>výlučne na vašu osobu</strong> — nie na spoludlžníkov a ručiteľov, od ktorých môže veriteľ naďalej vymáhať pohľadávky. Spoludlžníkov je preto nutné uviesť v Zozname veriteľov.</p>
+        </div>
+        <div class="info-card animate">
+            <h3><span class="icon">🔒</span> Nedotknuté pohľadávky</h3>
+            <p>Oddlžením <strong>nie sú dotknuté</strong> tieto pohľadávky:</p>
+            <ul>
+                <li>Pohľadávka dieťaťa na výživné</li>
+                <li>Pohľadávka zo zodpovednosti za škodu spôsobenú na zdraví alebo úmyselným konaním</li>
+                <li>Zabezpečená pohľadávka (v rozsahu krytia hodnotou predmetu zabezpečenia)</li>
+                <li>Pohľadávka z právnej pomoci CPP (pôžička 500 €)</li>
+                <li>Pracovnoprávne nároky zamestnancov</li>
+                <li>Peňažný trest podľa Trestného zákona</li>
+            </ul>
+        </div>
+        <div class="info-full info-card animate">
+            <h3><span class="icon">⚠️</span> Poctivý zámer — kľúčová podmienka oddlženia</h3>
+            <p>Vaši veritelia majú právo do <strong>6 rokov</strong> od oddlženia domáhať sa na súde jeho zrušenia, ak preukážu, že ste nemali poctivý zámer. Najčastejšie dôvody:</p>
+            <ul>
+                <li><strong>Neuvedenie majetku</strong> — v zozname majetku ste neuviedli časť majetku, hoci ste o ňom vedeli</li>
+                <li><strong>Neuvedenie veriteľa</strong> — neuviedli ste veriteľa (fyzickú osobu), v dôsledku čoho neprihlásil svoju pohľadávku</li>
+                <li><strong>Nepravdivé informácie</strong> — v návrhu alebo prílohách ste uviedli nepravdivé alebo neúplné dôležité informácie</li>
+                <li><strong>Nespolupráca so správcom</strong> — neposkytovali ste správcovi potrebnú súčinnosť</li>
+                <li><strong>Úmyselné zadlženie</strong> — úmyselne ste sa priviedli do platobnej neschopnosti alebo ste sa pri preberaní záväzkov spoliehali na oddlženie</li>
+                <li><strong>Neplnenie výživného</strong> — neplníte si vyživovaciu povinnosť na dieťa</li>
+                <li><strong>Nevrátenie pôžičky CPP</strong> — nesplníte povinnosť vrátiť 500 € Centru právnej pomoci</li>
+            </ul>
+            <p style="margin-top:12px"><strong>Preto je mimoriadne dôležité uvádzať pravdivé a úplné údaje — uviesť všetok majetok a všetkých veriteľov.</strong> Súd prihliada prísnejšie na dlžníkov s podnikateľskými skúsenosťami alebo významnejším majetkom, a miernejšie na dlžníkov s nižším vzdelaním, v dôchodkovom veku alebo s vážnymi zdravotnými problémami.</p>
+        </div>
+        <div class="info-card animate">
+            <h3><span class="icon">🏥</span> Zdravotné a sociálne poistenie</h3>
+            <p>Pri dlhoch na <strong>sociálnom poistení</strong> — poisťovňa vás môže naďalej viesť v zozname dlžníkov a obdobie dlhu sa nebude hodnotiť na účely nároku na dôchodok. Odporúčame tieto dlhy aj po oddlžení uhradiť.</p>
+            <p style="margin-top:10px">Pri dlhoch na <strong>zdravotnom poistení</strong> — aj napriek oddlženiu máte nárok na plnú zdravotnú starostlivosť.</p>
+        </div>
+        <div class="info-card animate">
+            <h3><span class="icon">💰</span> Pôžička 500 € od CPP</h3>
+            <p>Pri oddlžení <strong>konkurzom</strong> CPP poskytne pôžičku 500 € na odmenu správcu. Zmluva o pôžičke nadobúda účinnosť až vaším oddlžením. Pôžičku ste povinný vrátiť CPP <strong>do 2 rokov</strong>. Platby označujte variabilným symbolom = vaše rodné číslo (bez lomky).</p>
+            <p style="margin-top:10px">Pri oddlžení <strong>splátkovým kalendárom</strong> preddavok 500 € na odmenu správcu hradíte sami (CPP pôžičku neposkytuje). Navyše hradíte odmenu určeného advokáta 160 € (+ prípadná DPH).</p>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <h2>Pripravený začať odznova?</h2>
+    <p>Nemusíte čakať. Vyplňte formulár online a do hodiny môžete mať pripravené všetky dokumenty pre Centrum právnej pomoci.</p>
+    <a href="/formular" class="btn-hero btn-primary" style="display:inline-flex">Začať teraz — od 99 € →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+<div class="footer-inner">
+    <div class="footer-left">
+        © 2026 <a href="/">OddlženieOnline.sk</a> · Všetky práva vyhradené
+    </div>
+    <div class="footer-links">
+        <a href="/gdpr">Ochrana osobných údajov</a>
+        <a href="/obchodne-podmienky">Obchodné podmienky</a>
+        <a href="/cdn-cgi/l/email-protection#6801060e0728070c0c04120d06010d07060401060d461b03"><span class="__cf_email__" data-cfemail="5831363e3718373c3c34223d36313d37363431363d762b33">[email&#160;protected]</span></a>
+    </div>
+</div>
+</footer>
+
+<!-- Scroll animations -->
+<script>
+const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.animate').forEach(el=>obs.observe(el));
+
+// Mobile nav toggle
+const nav=document.querySelector('.nav-links');
+document.querySelector('.nav-inner')?.addEventListener('click',function(e){if(e.target.closest('.nav-logo'))return;if(window.innerWidth<=768){nav.classList.toggle('active')}});
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(q=>q.addEventListener('click',function(){const item=this.parentElement;const isOpen=item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));if(!isOpen)item.classList.add('open')}));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',function(e){e.preventDefault();const t=document.querySelector(this.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'})}));
+</script>
+</body>
+</html>
 
